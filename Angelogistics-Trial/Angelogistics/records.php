@@ -1,0 +1,676 @@
+<?php
+
+// Database credentials (Replace with your actual credentials)
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "acl2";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Function to fetch shipment data (for flexibility)
+function getShipmentData($conn, $filter_year, $sort_column, $sort_order) {
+    // SQL query to fetch data from the shipment table with dynamic sorting
+    $sql = "SELECT
+                shipment.shipment_id,
+                shipment.date_created,
+                encoding_phase.encoding_phase_name,
+                delivery_phase.delivery_phase_name,
+                importer.importer_name,
+                commodity.commodity_name,
+                shipment.number_of_containers,
+                container_deposit_status.deposit_status_name AS cd_status,
+                shipping_line.shipping_line_name,
+                shipment.eta,
+                GROUP_CONCAT(container.container_number) AS container_numbers
+            FROM shipment 
+            LEFT JOIN importer ON shipment.importer_id = importer.importer_id
+            LEFT JOIN commodity ON shipment.commodity_id = commodity.commodity_id
+            LEFT JOIN shipping_line ON shipment.shipping_line_id = shipping_line.shipping_line_id
+            LEFT JOIN encoding_phase ON shipment.encoding_phase_id = encoding_phase.encoding_phase_id
+            LEFT JOIN delivery_phase ON shipment.delivery_phase_id = delivery_phase.delivery_phase_id
+            LEFT JOIN container ON shipment.shipment_id = container.shipment_id
+            LEFT JOIN container_deposit_status ON shipment.container_deposit_status_id = container_deposit_status.deposit_status_id
+            WHERE YEAR(shipment.date_created) = ?
+            GROUP BY shipment.shipment_id
+            ORDER BY $sort_column $sort_order, shipment.shipment_id ASC";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $filter_year);
+
+    if (!$stmt->execute()) {
+        die("Query failed: " . $stmt->error);
+    }
+
+    $result = $stmt->get_result();
+    return $result;
+}
+
+// Get the current year
+$current_system_year = date("Y");
+
+// Initialize the selected year from the POST request or default to the current year
+$selected_year = isset($_POST['show']) ? $_POST['show'] : $current_system_year;
+
+// Initialize sorting parameters (using null coalescing operator for brevity)
+$sort_column = $_GET['sort'] ?? 'shipment.date_created'; // Default sort column
+$sort_order = $_GET['order'] ?? 'ASC'; // Default sort order
+
+// Sanitize sort parameters to prevent SQL injection (more robust)
+$allowed_columns = ['#', 'encoding_phase_name', 'delivery_phase_name', 'importer_name', 'commodity_name', 'number_of_containers', 'cd_status', 'shipping_line_name', 'eta', '15_days'];
+$column_mapping = [
+    '#' => 'shipment.date_created',
+    'encoding_phase_name' => 'encoding_phase.encoding_phase_name',
+    'delivery_phase_name' => 'delivery_phase.delivery_phase_name',
+    'importer_name' => 'importer.importer_name',
+    'commodity_name' => 'commodity.commodity_name',
+    'number_of_containers' => 'shipment.number_of_containers',
+    'cd_status' => 'container_deposit_status.deposit_status_name',
+    'shipping_line_name' => 'shipping_line.shipping_line_name',
+    'eta' => 'shipment.eta',
+    '15_days' => 'shipment.eta' // Sorting due date by ETA
+];
+
+if (isset($_GET['sort']) && in_array($_GET['sort'], $allowed_columns) && isset($column_mapping[$_GET['sort']])) {
+    $sort_column = $column_mapping[$_GET['sort']];
+}
+$sort_order = (isset($_GET['order']) && strtoupper($_GET['order']) == 'DESC') ? 'DESC' : 'ASC';
+
+// Fetch data using the function
+$result = getShipmentData($conn, $selected_year, $sort_column, $sort_order);
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Records</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    *{
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #d9d9d9;
+      display: flex;
+      height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    h1 {
+      margin: 0;
+    }
+
+    .user-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    
+    /* Sidebar */
+  
+    .sidebar {
+  height: 100vh;
+  width: 250px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #ffffff;
+  transition: width 0.3s ease;
+  overflow-x: hidden;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  z-index: 1002;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar a {
+  height: 50px;
+  padding: 12px 20px;
+  text-decoration: none;
+  font-size: 17px;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: 0.3s;
+}
+
+
+.sidebar.collapsed a {
+  justify-content: center;
+  gap: 0;
+}
+
+.sidebar.collapsed a span {
+  display: none;
+}
+
+
+
+/* Logo & toggle button */
+.logo-section {
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative; /* optional, for absolute positioning of logo inside */
+}
+
+.logo-img {
+  width: 150px;
+  max-height: 150px;
+  object-fit: contain;
+  transition: opacity 0.3s ease, width 0.3s ease;
+}
+
+
+/* Hide the logo when sidebar is collapsed */
+.sidebar.collapsed .logo-img {
+  /* Instead of width:0, use opacity and visibility for smooth transition */
+  opacity: 0;
+  visibility: hidden;
+  width: 0px;
+  height: 0px;
+}
+
+.sidebar .logo-section {
+  height: 60px;
+  padding: 40px 30px 70px 43px; /* Less top padding */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+}
+
+  .sidebar.collapsed .logo-section .text {
+    display: none;
+  }
+  
+  .toggle-btn {
+    background: none;
+    border: none;
+    font-size: 17px;
+    cursor: pointer;
+    color: #444;
+  }
+
+  .sidebar .menubtn {
+  position: fixed; /* ← Change from absolute to fixed */
+  top: 10px;
+  left: 230px;
+  height: 40px;
+  width: 40px;
+  z-index: 9999; /* ← Way above topbar (z-index 1001) */
+  color: #000000;
+  background: #e9e9e9;
+  text-align: center;
+  line-height: 42px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 17px;
+  transition: left 0.3s ease;
+  box-shadow: 0 12px 16px 0 rgba(99, 99, 99, 0.24), 0 17px 50px 0 rgba(99, 99, 99, 0.24);
+}
+
+
+/* Move button when sidebar is collapsed */
+.sidebar.collapsed .menubtn {
+  left: 15px; /* matches col lapsed width */
+}
+  
+/* Nav items */
+.nav-links {
+  padding: 10px 0;
+  flex-grow: 1;
+  transition: background-color 0.2s;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: #5c5c5c;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 17px;
+  border-radius: 15px;
+  cursor: pointer;
+  margin: 5px 10px;
+  transition: background-color 0.2s;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  background: #060644;
+  color: #eb972b;
+  backdrop-filter: blur(4px);
+  transform: scale(1.02);
+}
+
+
+.sidebar.collapsed .nav-links a {
+  justify-content: flex;
+  padding: 12px 20px;
+}
+
+.nav-links a i {
+  font-size: 17px;
+    min-width: 22px;
+    text-align: center;
+}
+
+.sidebar.collapsed .nav-links a span {
+  display: none;
+} 
+
+
+
+/* User & logout section */
+.user-section {
+    border-top: 1px solid #ddd;
+    padding: 10px 0px;
+    transition: background-color 0.2s;
+  }
+ 
+  .user-section a {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #5c5c5c;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 17px;
+    border-radius: 15px;
+    cursor:pointer;
+    margin: 5px 10px;
+    transition: background-color 0.2s;
+  }
+
+  .user-section a i {
+    font-size: 17px;
+    min-width: 22px;
+    text-align: center;
+  }
+
+  .user-section a:hover {
+     background: #060644;
+  color: #eb972b;
+    backdrop-filter: blur(4px); /* frosted glass effect for futuristic look */
+    transform: scale(1.02); /* slight enlargement for effect */
+  }
+
+  .sidebar.collapsed .user-section span {
+    display: none;
+  }
+/* Top bar styling */
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #060644;
+  font-size: 12px;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 90px; /* default space when sidebar is collapsed */
+  transition: padding-left 0.3s ease;
+  z-index: 1001;
+  box-shadow: 0 12px 16px 0 rgba(44, 44, 44, 0.24), 0 17px 50px 0 rgba(44, 44, 44, 0.24);
+}
+
+.topbar.shifted {
+      padding-left: 280px; /* space when sidebar is expanded */
+    }
+
+
+    #mainContent {
+  margin-left: 80px; /* collapsed sidebar */
+  margin-right: 10px;
+  width: calc(100% - 90px); /* 80 left + 10 right */
+  padding: 20px;
+  padding-top: 110px;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+#mainContent.shifted {
+  margin-left: 260px; /* expanded sidebar */
+  width: calc(100% - 270px); /* 250 left + 10 right */
+}
+
+
+    .data-box {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 17px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-top: 10px;
+    }
+    
+    
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      color: transparent;
+    }
+    header h1 { margin-left: 20px; font-size: 2em; font-weight: bold; }
+    .search-container {
+      background-color: #f8f9f0;
+      padding: 10px 15px;
+      border-radius: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      width: 500px;
+      margin-top: 10px;
+      position: relative;
+    }
+    .search-container input {
+      width: 100%;
+      padding: 8px 12px 8px 35px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      font-size: 1em;
+      box-sizing: border-box;
+      background-image: url(search-icon.png);
+      background-repeat: no-repeat;
+      background-size: 20px 20px;
+      background-position: 8px center;
+    }
+    .search-btn {
+      position: absolute;
+      right: 17px;
+      top: 51%;
+      transform: translateY(-51%);
+      padding: 8px 16px;
+      border: none;
+      border-radius: 30px;
+      background-color: #Eb972b;
+      color: #060644;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1;
+      transition: background-color 0.3s ease;
+    }
+    .search-btn:hover { background-color: #e67e22; }
+    .header-top {
+      display: flex;
+      align-items: center;
+    }
+    .show-dropdown {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      margin-top: 2px;
+      margin-left: auto;
+    }
+    .show-dropdown label {
+      font-size: 0.8em;
+      margin-right: 8px;
+    }
+    .show-dropdown select {
+      padding: 6px 10px;
+      font-size: 0.8em;
+      border-radius: 30px;
+      background-color: #f8f9f0;
+      border: 1px solid #ccc;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    thead { background-color: #eee; }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+      font-size: 14px;
+    }
+    tbody tr:hover { background-color: #f9f9f9; }
+
+    .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+    th {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    th.sorted.ascending::after {
+        content: ' ▲';
+    }
+
+    th.sorted.descending::after {
+        content: ' ▼';
+    }
+
+  </style>
+  
+</head>
+<body>
+  
+<!-- Sidebar -->
+<div id="mySidebar" class="sidebar">
+    <div class="logo-section">
+        <img src="logoangelo.png" alt="Logo" class="logo-img" />
+        <div id="toggleSidebar" class="menubtn"><i class="fas fa-bars"></i></div>
+    </div>
+  
+    <nav class="nav-links">
+    <a href="Dashboard.html"><i class="fas fa-home"></i><span>Dashboard</span></a>
+    <a href="Shipment.html"><i class="fas fa-truck"></i><span>Shipments</span></a>
+    <a href="records.php"><i class="fas fa-clipboard-list"></i><span>Records</span></a>
+    <a href="Analytics(Yearly).html" class="active"><i class="fas fa-chart-bar"></i><span>Analytics</span></a>
+  </nav>
+  
+    <div class="user-section">
+      <a href="#"><i class="fas fa-user"></i> <span>My Account</span></a>
+      <a href="#"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+    </div>
+  </div>
+  
+
+  <!-- Topbar -->
+  <div class="topbar shifted" id="topbar">
+    <h1>RECORDS</h1>
+    <img src="Sophie.jpg" alt="User" class="user-icon" />
+  </div>
+
+  <!-- Main Records Page -->
+  <div id="mainContent" class="shifted">
+    <header>
+      <h1>Records</h1>
+      <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Search..." />
+      <button class="search-btn" onclick="searchTable()">SEARCH</button>
+      </div>
+    </header>
+
+    <div class="data-box">
+        <div class="header-top">
+            <h2 style="margin:0;">SUMMARY</h2>
+            <div class="show-dropdown">
+                <label for="show">Show</label>
+                <form method="post">
+                    <select id="show" name="show" onchange="this.form.submit()">
+                        <?php
+                        $start_year = 2023;
+                        $end_year = intval(date("Y"));
+
+                        // Add the next year if the current date is in that year or later
+                        if (date("Y-m-d") >= ($end_year + 1) . "-01-01") {
+                            $end_year++;
+                        }
+
+                        for ($year = $start_year; $year <= $end_year; $year++) {
+                            echo '<option value="' . $year . '"';
+                            if ($selected_year == $year) {
+                                echo ' selected';
+                            }
+                            echo '>' . $year . '</option>';
+                        }
+                        ?>
+                    </select>
+                </form>
+            </div>
+        </div>
+    
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+                <th onclick="sortTable('#')" class="<?php if ($_GET['sort'] == '#') echo 'sorted ' . strtolower($_GET['order']); ?>">#</th>
+                <th onclick="sortTable('encoding_phase_name')" class="<?php if ($_GET['sort'] == 'encoding_phase_name') echo 'sorted ' . strtolower($_GET['order']); ?>">ENCODING/DOCU PHASE</th>
+                <th onclick="sortTable('delivery_phase_name')" class="<?php if ($_GET['sort'] == 'delivery_phase_name') echo 'sorted ' . strtolower($_GET['order']); ?>">FOR SHIPPING LINE/DELIVERY PHASE</th>
+                <th onclick="sortTable('importer_name')" class="<?php if ($_GET['sort'] == 'importer_name') echo 'sorted ' . strtolower($_GET['order']); ?>">IMPORTER</th>
+                <th onclick="sortTable('commodity_name')" class="<?php if ($_GET['sort'] == 'commodity_name') echo 'sorted ' . strtolower($_GET['order']); ?>">COMMODITY</th>
+                <th onclick="sortTable('number_of_containers')" class="<?php if ($_GET['sort'] == 'number_of_containers') echo 'sorted ' . strtolower($_GET['order']); ?>">NO. OF CONTAINERS</th>
+                <th onclick="sortTable('cd_status')" class="<?php if ($_GET['sort'] == 'cd_status') echo 'sorted ' . strtolower($_GET['order']); ?>">CD</th>
+                <th onclick="sortTable('shipping_line_name')" class="<?php if ($_GET['sort'] == 'shipping_line_name') echo 'sorted ' . strtolower($_GET['order']); ?>">SHIPPING LINE</th>
+                <th onclick="sortTable('eta')" class="<?php if ($_GET['sort'] == 'eta') echo 'sorted ' . strtolower($_GET['order']); ?>">ETA</th>
+                <th onclick="sortTable('15_days')" class="<?php if ($_GET['sort'] == '15_days') echo 'sorted ' . strtolower($_GET['order']); ?>">15 DAYS</th>
+            </tr>
+          </thead>
+          <tbody>
+          <?php
+                if ($result->num_rows > 0) {
+                    $row_number = 1; // Initialize row number
+                    while ($row = $result->fetch_assoc()) {
+                        // Format the shipment ID
+                        $formatted_shipment_id = date("Y", strtotime($row["date_created"])) . "-" . sprintf("%03d", $row_number);
+
+                        // Calculate the due date (15 days after ETA)
+                        $eta_date = new DateTime($row["eta"]);
+                        $eta_date->add(new DateInterval('P15D'));
+                        $due_date_display = $eta_date->format('Y-m-d');
+
+                        echo "<tr>";
+                        echo "<td>" . $formatted_shipment_id . "</td>";
+                        echo "<td>" . ($row["encoding_phase_name"] ?? "N/A") . "</td>";
+                        echo "<td>" . ($row["delivery_phase_name"] ?? "N/A") . "</td>";
+                        echo "<td>" . ($row["importer_name"] ?? "N/A") . "</td>";
+                        echo "<td>" . ($row["commodity_name"] ?? "N/A") . "</td>";
+                        echo "<td>" . $row["number_of_containers"] . "</td>";
+                        echo "<td>" . ($row["cd_status"] ?? "N/A") . "</td>";
+                        echo "<td>" . ($row["shipping_line_name"] ?? "N/A") . "</td>";
+                        echo "<td>" . $row["eta"] . "</td>";
+                        echo "<td>" . $due_date_display . "</td>";
+                        echo "</tr>";
+                        $row_number++; // Increment row number
+                    }
+                } else {
+                    echo "<tr><td colspan='12'>No results</td></tr>";
+                }
+                ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+  <script>
+    const sidebar = document.getElementById("mySidebar");
+    const topbar = document.getElementById("topbar");
+    const mainContent = document.getElementById("mainContent");
+    const toggleBtn = document.getElementById("toggleSidebar");
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedState = localStorage.getItem('sidebarState');
+      const isCollapsed = savedState === 'collapsed';
+
+      if (isCollapsed) {
+        sidebar.classList.add("collapsed");
+        topbar.classList.remove("shifted");
+        mainContent.classList.remove("shifted");
+      } else {
+        sidebar.classList.remove("collapsed");
+        topbar.classList.add("shifted");
+        mainContent.classList.add("shifted");
+      }
+    });
+       
+    toggleBtn.addEventListener("click", () => {
+  sidebar.classList.toggle("collapsed");
+  const isCollapsed = sidebar.classList.contains("collapsed");
+
+  // Save the state
+  localStorage.setItem('sidebarState', isCollapsed ? 'collapsed' : 'expanded');
+
+  // Toggle layout shift class
+  topbar.classList.toggle("shifted", !isCollapsed);
+  mainContent.classList.toggle("shifted", !isCollapsed);
+});
+
+    function sortTable(column) {
+        const currentSort = new URLSearchParams(window.location.search);
+        const currentColumn = currentSort.get('sort');
+        const currentOrder = currentSort.get('order');
+        let newOrder = 'ASC';
+
+        if (column === currentColumn && currentOrder === 'ASC') {
+            newOrder = 'DESC';
+        }
+
+        currentSort.set('sort', column);
+        currentSort.set('order', newOrder);
+
+        window.location.search = currentSort.toString();
+    }
+
+    function searchTable() {
+                    let input, filter, table, tr, td, i, txtValue;
+                    input = document.getElementById("searchInput");
+                    filter = input.value.toUpperCase();
+                    table = document.querySelector("table");
+                    tr = table.getElementsByTagName("tr");
+                    for (i = 1; i < tr.length; i++) { // Start from 1 to skip header row
+                        tr[i].style.display = ""; // Reset display
+                        let rowMatch = false;
+                        for (let j = 0; j < tr[i].cells.length; j++) {
+                            td = tr[i].cells[j];
+                            if (td) {
+                                txtValue = td.textContent || td.innerText;
+                                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                                    rowMatch = true;
+                                    break; // No need to check other cells if one matches
+                                }
+                            }
+                        }
+                        if (!rowMatch) {
+                            tr[i].style.display = "none";
+                        }
+                    }
+                }
+  </script>
+</body>
+</html>

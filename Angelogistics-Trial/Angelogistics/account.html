@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account</title>
+    <link rel="stylesheet" href="account-style.css" />
+    <link rel="stylesheet" href="modal.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+</head>
+<body data-user-role="">
+
+     <div id="mySidebar" class="sidebar collapsed">
+
+        <div class="logo-section">
+            <img src="logoangelo.png" alt="Logo" class="logo-img" />
+
+            <div id="toggleSidebarBtn" class="menubtn">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+
+        <nav class="nav-links">
+            <a href="Dashboard.html"><i class="fas fa-home"></i><span>Dashboard</span></a>
+            <a href="Shipment.html"><i class="fas fa-truck"></i><span>Shipments</span></a>
+            <a href="records.php"><i class="fas fa-clipboard-list"></i><span>Records</span></a>
+            <a href="Analytics(Yearly).html"><i class="fas fa-chart-bar"></i><span>Analytics</span></a>
+        </nav>
+
+
+        <div class="user-section">
+            <a href="account.html"><i class="fas fa-user"></i> <span>Account</span></a>
+            <a href="#"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <h1>My Account</h1>
+            <p class="subheading">Update your general information and manage your account settings.</p>
+        </div>
+        <div class="header-right">
+            <button class="cancel-button" id="cancelChanges">Cancel</button>
+            <button class="save-button" id="saveChanges">Save Changes</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="left-column">
+        <div class="profile-section">
+            <div class="profile-image">
+                <img src="sidebar-icon/profile-pic-icon.png" alt="Big Profile Picture" id="bigProfileImage">
+            </div>
+            <h2 class="account-name" id="accountName">Guest</h2>
+            <p class="username" id="usernameDisplay">@unknown</p>
+        </div>
+        <div class="actions">
+            <button class="change-password-button" id="openModal">
+            <img src="sidebar-icon/change-password.png" alt="Change Password" class="icon-img">Update Password
+            </button>
+        </div>
+        <div class="create-account-container">
+            <div id="createAccountLink">Create New Account</div>
+        </div>
+        </div>
+        <div class="right-column">
+            <h1>General Information</h1>
+            <div class="user-info-header">
+                <div class="user-info-right">
+                    <div class="button-group">
+                        <input type="file" id="imageInput" style="display: none;">
+                        <button class="upload-photo-button" id="uploadPhotoButton">Upload New Photo</button>
+                        <button class="cancel-button-small" id="cancelUpload">Cancel Upload</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-fields">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" placeholder="First Name" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="middleName">Middle Name</label>
+                        <input type="text" id="middleName" placeholder="Middle Name" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" placeholder="Last Name" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="suffix">Suffix</label>
+                        <input type="text" id="suffix" placeholder="Suffix" value="">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Username" value="">
+                </div>
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <input type="text" id="role" placeholder="Role" value="" readonly>
+                </div>
+            </div>
+            <input type="hidden" id="userId" value="0">
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-window">
+            <button class="close-modal" id="closeModal">&times;</button>
+            <h2>Change Password</h2>
+            <form id="changePasswordForm">
+                <label for="current">Current Password</label>
+                <input type="password" id="currentPassword" placeholder="Current Password" required>
+
+                <label for="new">New Password</label>
+                <input type="password" id="newPassword" placeholder="New Password" required>
+
+                <label for="confirm">Confirm New Password</label>
+                <input type="password" id="confirmPassword" placeholder="Re-type Password" required>
+
+                <button type="submit" class="submit-button">Save Password</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="createAccountModalOverlay">
+    <div class="modal-window">
+        <button class="close-modal" id="closeCreateAccountModal">&times;</button>
+        <h2>Create New Account</h2>
+        <form id="createAccountForm">
+            <label for="newFirstName">First Name</label>
+            <input type="text" id="newFirstName" placeholder="Enter First Name" required>
+
+            <label for="newMiddleName">Middle Name</label>
+            <input type="text" id="newMiddleName" placeholder="Enter Middle Name">
+
+            <label for="newLastName">Last Name</label>
+            <input type="text" id="newLastName" placeholder="Enter Last Name" required>
+
+            <label for="newSuffix">Suffix</label>
+            <input type="text" id="newSuffix" placeholder="Enter Suffix">
+
+            <label for="newUsername">Username</label>
+            <input type="text" id="newUsername" placeholder="Enter Username" required>
+
+            <label for="newPassword">Password</label>
+            <input type="password" id="newPasswordCreate" placeholder="Enter Password" required>
+
+            <label for="newRole">Role</label>
+            <select id="newRole" required>
+                <option value="Admin">Admin</option>
+                <option value="Employee">Employee</option>
+            </select>
+            <button type="submit" class="submit-button">Create Account</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="notificationModal" style="display: none;">
+        <div class="modal-window">
+            <h3 id="notificationMessage">This is a notification</h3>
+        <button class="submit-button" id="closeNotification">OK</button>
+        </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal" style="display: none;">
+    <div class="modal-window">
+        <h3 id="confirmMessage">Are you sure?</h3>
+                <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem;">
+                    <button id="confirmNo" class="confirm-button confirm-no">No</button>
+                <button id="confirmYes" class="confirm-button confirm-yes">Yes</button>
+        </div>
+    </div>
+</div>
+    <script>
+        const sidebar = document.getElementById("mySidebar");
+        const content = document.getElementById("mainContent");
+        const toggleBtn = document.getElementById("toggleSidebarBtn"); // One button for toggle
+
+        // On page load, apply sidebar state from localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedState = localStorage.getItem('sidebarState');
+            const isCollapsed = savedState === 'collapsed';
+
+            if (isCollapsed) {
+                sidebar.classList.add("collapsed");
+                content.classList.remove("shifted");
+            } else {
+                sidebar.classList.remove("collapsed");
+                content.classList.add("shifted");
+            }
+        });
+
+        toggleBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("collapsed");
+            const isCollapsed = sidebar.classList.contains("collapsed");
+
+            // Save the state
+            localStorage.setItem('sidebarState', isCollapsed ? 'collapsed' : 'expanded');
+
+            // Toggle layout shift class
+            content.classList.toggle("shifted", !isCollapsed);
+        });
+    </script>
+    <script src="account.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | AngelLogistics</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: url('BGartloginpage.svg') no-repeat center center fixed;
+      background-size: cover;
+      background-color: #f8f9f0;
+      height: 100vh;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0 5%;
+    }
+
+    .login-box {
+      background: rgba(206, 206, 206, 0.7);
+      backdrop-filter: blur(4px);
+      margin-left: 60px;
+      border-radius: 16px;
+      padding: 40px;
+      width: 550px;
+      max-width: 100%;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .login-box h2 {
+      font-size: 40px;
+      color: #000033;
+      margin-bottom: 10px;
+    }
+
+    .login-box p {
+      color: #555;
+      font-size: 18px;
+      margin-bottom: 25px;
+    }
+
+    .input-icon {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .input-icon img {
+      position: absolute;
+      top: 50%;
+      right: 417px;
+      transform: translateY(-50%);
+      width: 60px;
+      height: 60px;
+    }
+
+    .input-icon input {
+      width: 100%;
+      padding: 10px 10px 10px 40px;
+      border-radius: 8px;
+      border: none;
+      font-size: 15px;
+    }
+
+    .login-btn {
+      background-color: #000033;
+      color: #fff;
+      padding: 12px;
+      border: none;
+      width: 100%;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .login-btn:hover {
+      background-color: #1a1a4d;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 19px;
+      font-weight: bold;
+      color: #1a1a1a;
+     }
+
+     .logo {
+      position: absolute;
+      top: 45px;
+      right: 160px;
+      max-width: 500px;
+     }
+     .logo img {
+      width: 100%;
+      height: auto;
+     }
+
+
+  </style>
+</head>
+<body>
+
+    <div class="logo">
+        <img src="LogoLoginpage.svg" alt="AngelLogistics Logo">
+      </div>
+
+  <div class="login-box">
+    <h2>Login</h2>
+    <p>Please enter your details</p>
+
+    <form>
+        <label for="username">Username</label>
+        <div class="input-icon">
+          <img src="usernameicon.svg" alt="User Icon">
+          <input type="text" id="username" placeholder="Enter username...">
+        </div>
+      
+        <label for="password">Password</label>
+        <div class="input-icon">
+          <img src="passwordicon.svg" alt="Password Icon">
+          <input type="password" id="password" placeholder="Enter password...">
+        </div>
+      
+        <button type="submit" class="login-btn">LOGIN</button>
+      </form>
+      
+  </div>
+
+</body>
+</html>

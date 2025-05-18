@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Analytics</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #d9d9d9;
+      display: flex;
+      height: 100vh;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    .user-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      height: 100vh;
+      width: 250px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background-color: #ffffff;
+      transition: width 0.3s ease;
+      overflow-x: hidden;
+      z-index: 1002;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.collapsed {
+      width: 70px;
+    }
+
+    .sidebar a {
+      height: 50px;
+      padding: 12px 20px;
+      text-decoration: none;
+      font-size: 17px;
+      color: #000000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: 0.3s;
+    }
+
+    .sidebar.collapsed a {
+      justify-content: center;
+      gap: 0;
+    }
+
+    .sidebar.collapsed a span {
+      display: none;
+    }
+
+    .logo-section {
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-img {
+      width: 150px;
+      object-fit: contain;
+      transition: opacity 0.3s ease, width 0.3s ease;
+    }
+
+    .sidebar.collapsed .logo-img {
+      opacity: 0;
+      visibility: hidden;
+      width: 0;
+      height: 0;
+    }
+
+    .sidebar .logo-section {
+      height: 60px;
+      padding: 40px 30px 70px 43px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar.collapsed .logo-section .text {
+      display: none;
+    }
+
+    .toggle-btn {
+      background: none;
+      border: none;
+      font-size: 17px;
+      cursor: pointer;
+      color: #444;
+    }
+
+    .sidebar .menubtn {
+      position: fixed;
+      top: 10px;
+      left: 230px;
+      height: 40px;
+      width: 40px;
+      z-index: 9999;
+      color: #000000;
+      background: #e9e9e9;
+      text-align: center;
+      line-height: 42px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 17px;
+      transition: left 0.3s ease;
+      box-shadow: 0 12px 16px rgba(134,134,134,0.24), 0 17px 50px rgba(134,134,134,0.24);
+    }
+
+    .sidebar.collapsed .menubtn {
+      left: 15px;
+    }
+
+    .nav-links {
+      padding: 10px 0;
+      flex-grow: 1;
+    }
+
+    .nav-links a {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      color: #5c5c5c;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 17px;
+      border-radius: 15px;
+      margin: 5px 10px;
+      transition: background-color 0.2s;
+    }
+
+    .nav-links a:hover,
+.nav-links a.active {
+  background: #060644;
+  color: #eb972b;
+  backdrop-filter: blur(4px);
+  transform: scale(1.02);
+}
+
+
+    .sidebar.collapsed .nav-links a span {
+      display: none;
+    }
+
+    .user-section {
+      border-top: 1px solid #ddd;
+      padding: 10px 0;
+    }
+
+    .user-section a {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      color: #5c5c5c;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 17px;
+      border-radius: 15px;
+      margin: 5px 10px;
+    }
+
+    .user-section a:hover {
+      background: #060644;
+      color: #eb972b;
+      backdrop-filter: blur(4px);
+      transform: scale(1.02);
+    }
+
+    .sidebar.collapsed .user-section span {
+      display: none;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: #060644;
+      font-size: 12px;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-left: 90px;
+      transition: padding-left 0.3s ease;
+      z-index: 1001;
+      box-shadow: 0 12px 16px rgba(44,44,44,0.24), 0 17px 50px rgba(44,44,44,0.24);
+    }
+
+    .topbar.shifted {
+      padding-left: 280px;
+    }
+
+    #mainContent {
+      transition: margin-left 0.3s ease, width 0.3s ease;
+      margin-left: 80px;
+      margin-right: 10px;
+      width: calc(100% - 90px);
+      padding: 20px;
+      margin-top: 80px;
+    }
+
+    #mainContent.shifted {
+      margin-left: 260px;
+      width: calc(100% - 270px);
+    }
+
+    .dashboard-grid {
+      display: flex;
+      gap: 20px;
+      height: calc(100vh - 120px); /* fills the screen minus topbar */
+    }
+
+    .left-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex: 1;
+      min-width: 250px;
+      max-width: 500px;
+    }
+
+    .graph-box {
+  flex: 2;
+  display: flex;
+  justify-content: center; /* Centers the chart horizontally */
+  align-items: center; /* Centers the chart vertically */
+  background-color: #f4f4f9;
+  border-radius: 20px;
+  padding: 20px;
+  position: relative; /* Ensures the canvas can be scaled properly */
+  width: 100%; /* Makes sure the container takes the full width */
+  height: 100%; /* Ensures the container takes full height */
+}
+
+.graph-box canvas {
+  width: 100% !important; /* Forces the canvas to take 100% of the width */
+  height: auto !important; /* Maintains the aspect ratio */
+  max-width: 100%; /* Prevents it from exceeding container width */
+  max-height: 100%; /* Prevents it from exceeding container height */
+  display: block; /* Removes any default inline styling */
+}
+
+    .card {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .shipment-box {
+  background-color: #0b0b50;
+  color: #eb972b;
+  display: flex;
+  flex-direction: column;
+  padding-top: 56px;
+  padding-bottom: 20px;
+  flex: 1;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.shipment-box h3 {
+  margin: 14px 0 0 0; /* Adds top margin */
+  font-size: 40px; /* Increased from 18px */
+  font-weight: bold;
+
+}
+.shipment-box p {
+  font-size: 124px;  /* Adjust as needed to "maximize" space */
+  margin: auto 0;   /* Vertically center within the box */
+  font-weight: bold;
+  text-align: center;
+}
+.container-box {
+  background-color: #0b0b50;
+  color: #eb972b;
+  display: flex;
+  flex-direction: column;
+  padding-top: 56px;
+  padding-bottom: 20px;
+  flex: 1;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.container-box h3 {
+  margin: 14px 0 0 0; /* Adds top margin */
+  font-size: 40px; /* Increased from 18px */
+  font-weight: bold;
+}
+
+.container-box p {
+  font-size: 124px;  /* Adjust as needed to "maximize" space */
+  margin: auto 0;   /* Vertically center within the box */
+  font-weight: bold;
+  text-align: center;
+}
+    .button-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.status-btn {
+  background-color: #060644;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.status-btn:hover {
+  background-color: #eb972b;
+}
+
+.status-btn.active {
+  background-color: #eb972b;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div id="mySidebar" class="sidebar collapsed">
+  <div class="logo-section">
+    <img src="logoangelo.png" alt="Logo" class="logo-img" />
+    <div id="toggleSidebarBtn" class="menubtn">
+      <i class="fas fa-bars"></i>
+    </div>
+  </div>
+
+  <nav class="nav-links">
+    <a href="Dashboard.html"><i class="fas fa-home"></i><span>Dashboard</span></a>
+    <a href="Shipment.html"><i class="fas fa-truck"></i><span>Shipments</span></a>
+    <a href="records.php"><i class="fas fa-clipboard-list"></i><span>Records</span></a>
+    <a href="Analytics(Yearly).html" class="active"><i class="fas fa-chart-bar"></i><span>Analytics</span></a>
+  </nav>
+
+  <div class="user-section">
+    <a href="account.html"><i class="fas fa-user"></i> <span>My Account</span></a>
+    <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+  </div>
+</div>
+
+<!-- Top Bar -->
+<div class="topbar" id="topbar">
+  <h1>ANALYTICS</h1>
+  
+</div>
+
+<!-- Main Content -->
+<div id="mainContent">
+  <div class="dashboard-grid">
+    <div class="left-column">
+      <div class="button-group">
+        <button id="yearlyBtn" class="status-btn active">Yearly Status</button>
+        <button id="dailyBtn" class="status-btn">Daily Status</button>
+      </div>      
+      <div class="card shipment-box">
+        <h3>Count of Shipment</h3>
+        <p id="active_shipments"></p>
+      </div>
+      <div class="card container-box">
+        <h3>No. of Containers</h3>
+         <p id="total_containers"></p>
+      </div>
+    </div>
+
+    <div class="card graph-box">
+      <h3>Importation Graph</h3>
+      <canvas id="myPieChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  const sidebar = document.getElementById("mySidebar");
+  const content = document.getElementById("mainContent");
+  const topbar = document.getElementById("topbar");
+  const toggleBtn = document.getElementById("toggleSidebarBtn");
+  const yearlyBtn = document.getElementById('yearlyBtn');
+  const dailyBtn = document.getElementById('dailyBtn');
+
+  document.addEventListener('DOMContentLoaded', () => {
+  const savedStatus = localStorage.getItem('statusType') || 'yearly';  // Default to 'yearly'
+
+  // Get the current page name
+  const currentPage = window.location.pathname;
+
+  // If we're on the wrong subpage (e.g., you saved 'daily' but are on 'yearly'), redirect
+  if (currentPage.includes('Analytics(Daily).html') && savedStatus !== 'daily') {
+    window.location.href = 'Analytics(Yearly).html';
+  } else if (currentPage.includes('Analytics(Yearly).html') && savedStatus !== 'yearly') {
+    window.location.href = 'Analytics(Daily).html';
+  }
+});
+
+  document.addEventListener('DOMContentLoaded', () => {
+  const savedState = localStorage.getItem('sidebarState');
+  const isCollapsed = savedState === 'collapsed';
+
+  if (isCollapsed) {
+    sidebar.classList.add("collapsed");
+    content.classList.remove("shifted");
+    topbar.classList.remove("shifted");
+  } else {
+    sidebar.classList.remove("collapsed");
+    content.classList.add("shifted");
+    topbar.classList.add("shifted");
+  }
+
+  // Highlight the correct status button
+  const savedStatus = localStorage.getItem('statusType') || 'yearly';
+  if (savedStatus === 'daily') {
+    dailyBtn.classList.add('active');
+    yearlyBtn.classList.remove('active');
+    updateChart('daily');
+  } else {
+    yearlyBtn.classList.add('active');
+    dailyBtn.classList.remove('active');
+    updateChart('yearly');
+  }
+});
+
+ // Sample Pie chart data
+ new Chart(document.getElementById('importationChart'), {
+  type: 'pie',
+  data: {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr'],
+    datasets: [{
+      label: 'Import Volume',
+      data: [12, 19, 3, 5], // Pie chart data
+      backgroundColor: ['#060644', '#eb972b', '#00bfae', '#fa5b3d'], // Different colors for segments
+    }]
+  },
+  options: {
+    responsive: true, // Makes the chart responsive to container size changes
+    maintainAspectRatio: false, // Prevents the aspect ratio from locking the height
+    plugins: {
+      legend: {
+        position: 'right', // Positions the legend to the right
+      },
+      tooltip: {
+        callbacks: {
+          label: function(tooltipItem) {
+            return tooltipItem.label + ': ' + tooltipItem.raw + ' units';
+          }
+        }
+      }
+    }
+  }
+});
+
+toggleBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("collapsed");
+    content.classList.toggle("shifted");
+    topbar.classList.toggle("shifted");
+
+    const isCollapsed = sidebar.classList.contains("collapsed");
+    localStorage.setItem("sidebarState", isCollapsed ? "collapsed" : "expanded");
+  });
+
+dailyBtn.addEventListener('click', () => {
+  localStorage.setItem('statusType', 'daily');
+  window.location.href = 'Analytics(Daily).html';
+});
+
+yearlyBtn.addEventListener('click', () => {
+  localStorage.setItem('statusType', 'yearly');
+  window.location.href = 'Analytics(Yearly).html';
+});
+
+
+document.getElementById('logoutBtn').addEventListener('click', function (e) {
+  e.preventDefault();
+  
+  // Clear any stored auth data (example: localStorage, sessionStorage, cookies)
+  localStorage.clear();
+  sessionStorage.clear();
+  // If you use cookies for auth (optional — depends on your backend)
+  document.cookie = 'session=; Max-Age=0; path=/;';
+
+  // Redirect to login page
+  window.location.href = 'LoginPage.html';
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const savedState = localStorage.getItem('sidebarState');
+  const isCollapsed = savedState === 'collapsed';
+
+  const elements = [sidebar, topbar, mainContent];
+
+  // Temporarily disable all transitions (no flicker guaranteed)
+  elements.forEach(el => el.style.transition = 'none');
+
+  if (isCollapsed) {
+    sidebar.classList.add("collapsed");
+    topbar.classList.remove("shifted");
+    mainContent.classList.remove("shifted");
+  } else {
+    sidebar.classList.remove("collapsed");
+    topbar.classList.add("shifted");
+    mainContent.classList.add("shifted");
+  }
+
+  // Force reflow to "lock in" styles
+  elements.forEach(el => void el.offsetHeight);
+
+  // Re-enable transitions
+  elements.forEach(el => el.style.transition = '');
+});
+
+fetch('shipment_api.php?action=importer_summary')
+  .then(response => response.json())
+  .then(data => {
+    const importers = data.map(item => item.importer);
+    const shipmentCounts = data.map(item => item.shipment_count);
+
+    // Custom color palette with shades of blue, dark blue, light blue, yellow, orange, gray, and dark gray
+    const colorPalette = [
+        '#1E3A8A', // Dark Blue
+        '#3B82F6', // Blue
+        '#93C5FD', // Light Blue
+        '#F59E0B', // Yellowish Orange
+        '#FBBF24', // Yellow variant
+        '#D97706', // Orange variant
+        '#1D4ED8', // Blue 600
+        '#60A5FA', // Sky Blue
+        '#9CA3AF', // Light Gray
+        '#4B5563', // Dark Gray
+        '#2563EB', // Sky Blue 500
+        '#1E40AF', // Deep Blue
+        '#F87171', // Soft Red (replaced with a darker hue for variety)
+        '#64748B', // Blue-gray
+        '#F3F4F6', // Light Gray (off white)
+        '#D1D5DB', // Light Gray (darker)
+        '#F43F5E', // Red variant (used sparingly)
+        '#E5E7EB', // Lightest Gray
+        '#6B7280', // Gray Dark
+        '#111827', // Dark Grey (Deepest)
+        '#3B82F6', // Blue Light
+        '#F9A8D4', // Pink-Orange Tint
+        '#B3B3B3', // Neutral Gray
+        '#D1D5DB', // Light Gray
+        '#9CA3AF', // Gray
+        '#818CF8', // Purple-ish Light Blue
+        '#A5B4FC', // Lavender Blue
+        '#2D3748', // Dark Grayish Blue
+        '#334155', // Darker Blue
+        '#A3A3A3', // Mid-Gray
+        '#B0D0D3', // Pale Blue Gray
+        '#FBBF24', // Yellow Orange
+        '#D97706', // Deep Orange
+        '#FCD34D', // Bright Yellow
+        '#C2C2C2', // Neutral Gray
+    ];
+
+    const ctx = document.getElementById('myPieChart').getContext('2d');
+    const myPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: importers,
+            datasets: [{
+                data: shipmentCounts,
+                backgroundColor: colorPalette.slice(0, importers.length), // Adjust colors based on number of importers
+                borderColor: '#ffffff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 15
+                    }
+                },
+                title: {
+                    display: false // Title removed
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            return `${label}: ${value}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+  });
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Fetch the count of total shipments when the page is loaded
+    fetch('shipment_api.php?action=count_active_shipments')
+        .then(response => response.json())  // Parse the JSON response
+        .then(data => {
+            if (data.total_shipments !== undefined) {
+                // Update the HTML with the total shipments count
+                document.getElementById('active_shipments').textContent = data.total_shipments;
+            } else {
+                // Display an error message if there's no total shipments data
+                document.getElementById('active_shipments').textContent = "Error fetching data";
+            }
+        })
+        .catch(error => {
+            // Display an error message if the fetch request fails
+            console.error('Error fetching total shipments count:', error);
+            document.getElementById('active_shipments').textContent = "Error fetching data";
+        });
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Fetch the count of total containers when the page is loaded
+    fetch('shipment_api.php?action=count_total_containers')
+        .then(response => response.json())  // Parse the JSON response
+        .then(data => {
+            if (data.total_containers !== undefined) {
+                // Update the HTML with the total containers count
+                document.getElementById('total_containers').textContent = data.total_containers;
+            } else {
+                // Display an error message if there's no total containers data
+                document.getElementById('total_containers').textContent = "Error fetching data";
+            }
+        })
+        .catch(error => {
+            // Display an error message if the fetch request fails
+            console.error('Error fetching total containers count:', error);
+            document.getElementById('total_containers').textContent = "Error fetching data";
+        });
+});
+
+
+</script>
+</body>
+</html>

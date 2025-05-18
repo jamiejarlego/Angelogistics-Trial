@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <meta charset="UTF-8" />
+  <title>Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #d9d9d9;
+      display: flex;
+      height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    h1 {
+      margin: 0;
+    }
+
+    .user-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    
+    /* Sidebar */
+  
+    .sidebar {
+  height: 100vh;
+  width: 250px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #ffffff;
+  transition: width 0.3s ease;
+  overflow-x: hidden;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  z-index: 1002;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar a {
+  height: 50px;
+  padding: 12px 20px;
+  text-decoration: none;
+  font-size: 17px;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: 0.3s;
+}
+
+
+.sidebar.collapsed a {
+  justify-content: center;
+  gap: 0;
+}
+
+.sidebar.collapsed a span {
+  display: none;
+}
+
+
+
+/* Logo & toggle button */
+.logo-section {
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative; /* optional, for absolute positioning of logo inside */
+}
+
+.logo-img {
+  width: 150px;
+  max-height: 150px;
+  object-fit: contain;
+  transition: opacity 0.3s ease, width 0.3s ease;
+}
+
+
+/* Hide the logo when sidebar is collapsed */
+.sidebar.collapsed .logo-img {
+  /* Instead of width:0, use opacity and visibility for smooth transition */
+  opacity: 0;
+  visibility: hidden;
+  width: 0px;
+  height: 0px;
+}
+
+.sidebar .logo-section {
+  height: 60px;
+  padding: 40px 30px 70px 43px; /* Less top padding */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+}
+
+  .sidebar.collapsed .logo-section .text {
+    display: none;
+  }
+  
+  .toggle-btn {
+    background: none;
+    border: none;
+    font-size: 17px;
+    cursor: pointer;
+    color: #444;
+  }
+
+  .sidebar .menubtn {
+  position: fixed; /* ← Change from absolute to fixed */
+  top: 10px;
+  left: 230px;
+  height: 40px;
+  width: 40px;
+  z-index: 9999; /* ← Way above topbar (z-index 1001) */
+  color: #000000;
+  background: #e9e9e9;
+  text-align: center;
+  line-height: 42px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 17px;
+  transition: left 0.3s ease;
+  box-shadow: 0 12px 16px 0 rgba(99, 99, 99, 0.24), 0 17px 50px 0 rgba(99, 99, 99, 0.24);
+}
+
+
+/* Move button when sidebar is collapsed */
+.sidebar.collapsed .menubtn {
+  left: 15px; /* matches col lapsed width */
+}
+  
+/* Nav items */
+.nav-links {
+  padding: 10px 0;
+  flex-grow: 1;
+  transition: background-color 0.2s;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: #5c5c5c;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 17px;
+  border-radius: 15px;
+  cursor: pointer;
+  margin: 5px 10px;
+  transition: background-color 0.2s;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  background: #060644;
+  color: #eb972b;
+  backdrop-filter: blur(4px);
+  transform: scale(1.02);
+}
+
+
+.sidebar.collapsed .nav-links a {
+  justify-content: flex;
+  padding: 12px 20px;
+}
+
+.nav-links a i {
+  font-size: 17px;
+    min-width: 22px;
+    text-align: center;
+}
+
+.sidebar.collapsed .nav-links a span {
+  display: none;
+} 
+
+
+
+/* User & logout section */
+.user-section {
+    border-top: 1px solid #ddd;
+    padding: 10px 0px;
+    transition: background-color 0.2s;
+  }
+ 
+  .user-section a {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #5c5c5c;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 17px;
+    border-radius: 15px;
+    cursor:pointer;
+    margin: 5px 10px;
+    transition: background-color 0.2s;
+  }
+
+  .user-section a i {
+    font-size: 17px;
+    min-width: 22px;
+    text-align: center;
+  }
+
+  .user-section a:hover {
+     background: #060644;
+  color: #eb972b;
+    backdrop-filter: blur(4px); /* frosted glass effect for futuristic look */
+    transform: scale(1.02); /* slight enlargement for effect */
+  }
+
+  .sidebar.collapsed .user-section span {
+    display: none;
+  }
+/* Top bar styling */
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #060644;
+  font-size: 12px;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 90px; /* default space when sidebar is collapsed */
+  transition: padding-left 0.3s ease;
+  z-index: 1001;
+  box-shadow: 0 12px 16px 0 rgba(44, 44, 44, 0.24), 0 17px 50px 0 rgba(44, 44, 44, 0.24);
+}
+
+.topbar.shifted {
+      padding-left: 280px; /* space when sidebar is expanded */
+    }
+
+
+ /* Main content wrapper */
+
+ #mainContent {
+  transition: margin-left 0.3s ease, width 0.3s ease;
+  margin-left: 80px;
+  margin-right: 10px;
+  width: calc(100% - 90px);
+  padding: 20px;
+}
+
+#mainContent.shifted {
+  margin-left: 260px;
+  width: calc(100% - 270px);
+}
+
+.dashboard-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Left Column: stack vertically */
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  min-width: 250px;
+}
+
+/* Right Column: graph expands */
+.graph-box {
+  flex: 2;
+  min-width: 300px;
+  height: 100%;
+}
+
+/* Chart container should expand */
+.graph-box canvas {
+  width: 100%;
+  height: 300px;
+}
+
+.dashboard-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 90px; /* leave space for fixed top bar */
+  transition: margin-left 0.3s ease; /* Smooth transition when shifting content */
+}
+
+
+.bodycontainer {
+  display: flex;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 0px; /* leave space for fixed top bar */
+  transition: margin-left 0.3s ease; /* Smooth transition when shifting content */
+  
+}
+
+    .data-box {
+      background-color: #060644;
+      border: 1px solid #ccc;
+      border-radius: 17px;
+      box-shadow: 0 0 10px #ddd;
+      padding: 20px;
+      flex-direction: column;
+      justify-content: flex;
+      min-height: 120px;
+    }
+
+    .deposit-box {
+      background-color: #eb972b;
+      background-image: linear-gradient(90deg,#ffde59, #ff914d);
+      border: 1px solid #ccc;
+      border-radius: 17px;
+      box-shadow: 0 0 10px #ddd;
+      padding: 20px;
+      flex-direction: column;
+      justify-content: flex;
+      min-height: 120px;
+    }
+
+    .data-box-content {
+      display: flex;
+      justify-content: space-between;
+      color: #eb972b;
+      align-items: center;
+    }
+    .label {
+      text-align: left;
+      font-size: 16px;
+      color: #eb972b;
+      line-height: 1.4;
+    }
+    .count {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: right;
+    }
+    .deposit-header {
+      font-weight: bold;
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .deposit-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .graph-box,
+    .pie-box {
+      margin-top: 20px;
+      background-color: #fdfdfd;
+      border: 1px solid #ccc;
+      border-radius: 17px;
+      box-shadow: 0 0 10px #ddd;
+      padding: 20px;
+      width: 700px;
+      height: auto;
+      box-sizing: border-box;
+      max-height: 500px;
+    }
+
+    .pie-box canvas {
+  height: 60px;
+}
+
+    .graph-header,
+    .pie-header {
+      font-weight: bold;
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 15px;
+      
+    }
+    .shipment-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 40px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+    }
+    .shipment-controls .left-title {
+      font-weight: bold;
+      font-size: 20px;
+    }
+    .shipment-controls .right-filter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .right-filter {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      margin-top: 2px;
+      margin-left: auto;
+    }
+    .right-filter label {
+      font-size: 0.8em;
+      margin-right: 8px;
+    }
+    .right-filter select {
+      padding: 6px 10px;
+      font-size: 0.8em;
+      border-radius: 30px;
+      background-color: #f8f9f0;
+      border: 1px solid #ccc;
+    }
+
+    select {
+      padding: 5px 10px;
+      font-size: 16px;
+    }
+    .shipment-box {
+      background-color: #ffffff;
+      padding: 20px 30px;
+      border-radius: 17px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .shipment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .shipment-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+    }
+table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    table th, table td {
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #ddd;
+      font-size: 14px;
+    }
+
+    table th {
+      background-color: #f8f8f8;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #333;
+    }
+
+    table td {
+      background-color: #fff;
+    }
+
+        .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+  </style>
+</head>
+<body>
+
+ <!-- Sidebar -->
+ <div id="mySidebar" class="sidebar collapsed">
+  
+  <div class="logo-section">
+    <!-- Placeholder logo -->
+    <img src="logoangelo.png" alt="Logo" class="logo-img" />
+  
+    <!-- Menu toggle button -->
+    <div id="toggleSidebarBtn" class="menubtn">
+      <i class="fas fa-bars"></i>
+    </div>
+  </div>
+
+  <nav class="nav-links">
+    <a href="Dashboard.html"  class="active"><i class="fas fa-home"></i><span>Dashboard</span></a>
+    <a href="Shipment.html"><i class="fas fa-truck"></i><span>Shipments</span></a>
+    <a href="records.php"><i class="fas fa-clipboard-list"></i><span>Records</span></a>
+    <a href="Analytics(Yearly).html"><i class="fas fa-chart-bar"></i><span>Analytics</span></a>
+  </nav>
+
+
+<div class="user-section">
+  <a href="account.html"><i class="fas fa-user"></i> <span>My Account</span></a>
+  <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+</div>
+</div>
+
+
+<!-- Top Bar -->
+<div class="topbar" id="topbar">
+  <h1>DASHBOARD</h1>
+  
+</div>
+
+  <!-- Main Content -->
+  <div class="content" id="mainContent">
+    <div class="dashboard-container">
+      <div class="data-box">
+        <div class="data-box-content">
+          <div class="label">Count of<br />Shipments</div>
+          <div class="count" id='active_shipments'>...</div>
+        </div>
+      </div>
+      <div class="data-box">
+        <div class="data-box-content">
+          <div class="label">No. of<br />Containers</div>
+          <div class="count" id='total_containers'>...</div>
+        </div>
+      </div>
+      <div class="deposit-box">
+        <div class="deposit-header">CONTAINER DEPOSIT</div>
+        <div class="deposit-row">
+          <div class="deposit-label">CD</div>
+          <div class="deposit-value" id="container_cd">...</div>
+        </div>
+        <div class="deposit-row">
+          <div class="deposit-label">CD COLLECTED</div>
+          <div class="deposit-value" id="container_cd_collected">...</div>
+        </div>
+        <div class="deposit-row">
+          <div class="deposit-label">NO CD</div>
+          <div class="deposit-value" id="container_no_cd">...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bodycontainer">
+      <div class="graph-box">      
+        <div class="graph-header">Monthly Shipments Trend</div>
+        <canvas id="shipmentTrendChart"></canvas>
+      </div>
+
+      <div class="pie-box">
+        <div class="pie-header">Importation Graph</div>
+        <canvas id="myPieChart"></canvas>
+      </div>
+    </div>
+ 
+  
+
+    <div class="shipment-controls">
+      <div class="left-title">Shipment List</div>
+      <div class="right-filter">
+        <span>Show</span>
+        <select id="yearSelector">
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="shipment-box">
+      <div class="shipment-header">
+        <div class="shipment-title">SHIPMENT LISTS</div>
+        <div class="year-filter">
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="shipmentTable">
+          <colgroup>
+            <col style="width: 40px;">
+            <col style="width: 150px;">
+            <col style="width: 150px;">
+            <col style="width: 120px;">
+            <col style="width: 120px;">
+            <col style="width: 80px;">
+            <col style="width: 80px;">
+            <col style="width: 140px;">
+            <col style="width: 100px;">
+            <col style="width: 80px;">
+            <col style="width: 60px;">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Encoding/ Docuphase</th>
+              <th>For Shipping Line/ Delivery Phase</th>
+              <th>Importer</th>
+              <th>Commodity</th>
+              <th>No. of Containers</th>
+              <th>CD</th>
+              <th>Shipping Line</th>
+              <th>ETA</th>
+              <th class="days-column">15 DAYS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>UPLOADED</td>
+              <td>FOR DELIVERY</td>
+              <td>Importer A</td>
+              <td>Electronics</td>
+              <td>5</td>
+              <td>CD</td>
+              <td>Shipping Line A</td>
+              <td>2025-06-15</td>
+              <td class="days-column">10</td>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+  <script>
+    const sidebar = document.getElementById("mySidebar");
+    const content = document.getElementById("mainContent");
+    const topbar = document.getElementById("topbar");
+    const toggleBtn = document.getElementById("toggleSidebarBtn"); // One button for toggle
+  
+    // On page load, apply sidebar state from localStorage
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedState = localStorage.getItem('sidebarState');
+      const isCollapsed = savedState === 'collapsed';
+      
+      if (isCollapsed) {
+        sidebar.classList.add("collapsed");
+        content.classList.remove("shifted");
+        topbar.classList.remove("shifted");
+        
+      } else {
+        sidebar.classList.remove("collapsed");
+        content.classList.add("shifted");
+        topbar.classList.add("shifted");
+        
+      }
+    });
+  
+    toggleBtn.addEventListener("click", () => {
+  sidebar.classList.toggle("collapsed");
+  const isCollapsed = sidebar.classList.contains("collapsed");
+
+  // Save the state
+  localStorage.setItem('sidebarState', isCollapsed ? 'collapsed' : 'expanded');
+
+  // Toggle layout shift class
+  topbar.classList.toggle("shifted", !isCollapsed);
+  content.classList.toggle("shifted", !isCollapsed);
+});
+
+
+    // Fetch utility function
+    function safeFetch(url, onSuccess, onError) {
+      fetch(url)
+        .then((response) => {
+          if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+          return response.json();
+        })
+        .then(onSuccess)
+        .catch((err) => {
+          console.error(`Error fetching ${url}:`, err);
+          if (onError) onError(err);
+        });
+    }
+
+    // Fetch Summary Data
+    safeFetch(
+      "/api/get-shipment-count",
+      (data) => {
+        document.getElementById("shipmentCount").textContent = data.count;
+      },
+      () => {
+        document.getElementById("shipmentCount").textContent = "Error";
+      }
+    );
+
+    safeFetch(
+      "/api/get-container-count",
+      (data) => {
+        document.getElementById("containerCount").textContent = data.count;
+      },
+      () => {
+        document.getElementById("containerCount").textContent = "Error";
+      }
+    );
+
+    safeFetch(
+      "/api/get-container-deposit",
+      (data) => {
+        document.getElementById("cd").textContent = data.cd;
+        document.getElementById("cdCollected").textContent = data.cdCollected;
+        document.getElementById("noCd").textContent = data.noCd;
+      },
+      () => {
+        document.getElementById("cd").textContent = "Error";
+        document.getElementById("cdCollected").textContent = "Error";
+        document.getElementById("noCd").textContent = "Error";
+      }
+    );
+
+    // Chart: Monthly Shipments
+    safeFetch("http://localhost/Angelogistics/api/get-monthly-shipment.php", (data) => {
+      new Chart(document.getElementById("shipmentTrendChart").getContext("2d"), {
+        type: "line",
+        data: {
+          labels: data.months,
+          datasets: [
+            {
+              label: "Shipments per Month",
+              data: data.counts,
+              borderColor: "rgba(75, 192, 192, 1)",
+              backgroundColor: "rgba(75, 192, 192, 0.2)",
+              tension: 0.3,
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+        },
+      });
+    });
+
+    // Chart: Importer Distribution Pie
+    safeFetch("/api/get-importer-distribution", (data) => {
+      new Chart(document.getElementById("importerPieChart").getContext("2d"), {
+        type: "pie",
+        data: {
+          labels: data.importers,
+          datasets: [
+            {
+              data: data.percentages,
+              backgroundColor: [
+                "#ff6384",
+                "#36a2eb",
+                "#ffce56",
+                "#4bc0c0",
+                "#9966ff",
+              ],
+              borderColor: "#fff",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+        },
+      });
+    });
+
+    // Shipment Table Fetcher
+    function fetchShipments(year) {
+      safeFetch(`/api/get-shipments?year=${year}`, (data) => {
+        const tbody = document.querySelector("#shipmentListTable tbody");
+        tbody.innerHTML = "";
+        data.forEach((item, index) => {
+          const row = `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${item.encoding_phase}</td>
+              <td>${item.shipping_phase}</td>
+              <td>${item.importer}</td>
+              <td>${item.commodity}</td>
+              <td>${item.container_count}</td>
+              <td>${item.cd}</td>
+              <td>${item.shipping_line}</td>
+              <td>${item.eta}</td>
+              <td>${item.fifteen_days}</td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      }, () => {
+        const tbody = document.querySelector("#shipmentListTable tbody");
+        tbody.innerHTML =
+          '<tr><td colspan="10">Failed to load shipment data</td></tr>';
+      });
+    }
+
+document.getElementById('logoutBtn').addEventListener('click', function (e) {
+  e.preventDefault();
+  
+  // Clear any stored auth data (example: localStorage, sessionStorage, cookies)
+  localStorage.clear();
+  sessionStorage.clear();
+  // If you use cookies for auth (optional — depends on your backend)
+  document.cookie = 'session=; Max-Age=0; path=/;';
+
+  // Redirect to login page
+  window.location.href = 'LoginPage.html';
+});
+
+
+    // Year dropdown listener
+    document
+      .getElementById("yearSelector")
+      .addEventListener("change", function () {
+        fetchShipments(this.value);
+      });
+
+    // Load initial shipment list (2025)
+    fetchShipments(2025);
+
+    document.addEventListener("DOMContentLoaded", function() {
+  fetch('shipment_api.php?action=cd_counts')
+    .then(response => response.json())
+    .then(data => {
+      console.log("Container Deposit Data:", data);  // Log the full response
+
+      if (data.container_deposit) {
+        document.getElementById('container_cd').innerText = data.container_deposit['CD'] ?? 0;
+        document.getElementById('container_cd_collected').innerText = data.container_deposit['CD COLLECTED'] ?? 0;
+        document.getElementById('container_no_cd').innerText = data.container_deposit['NO CD'] ?? 0;
+      } else {
+        console.error('Invalid data received', data);
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching container deposit data:', error);
+    });
+});
+
+fetch('shipment_api.php?action=count_active_shipments')
+    .then(response => response.json())
+    .then(data => {
+      if (data.total_shipments !== undefined) {
+        document.getElementById('active_shipments').textContent = data.total_shipments;
+      } else {
+        document.getElementById('active_shipments').textContent = "Error fetching data";
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching total shipments count:', error);
+      document.getElementById('active_shipments').textContent = "Error fetching data";
+    });
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Fetch the count of total containers when the page is loaded
+    fetch('shipment_api.php?action=count_total_containers')
+        .then(response => response.json())  // Parse the JSON response
+        .then(data => {
+            if (data.total_containers !== undefined) {
+                // Update the HTML with the total containers count
+                document.getElementById('total_containers').textContent = data.total_containers;
+            } else {
+                // Display an error message if there's no total containers data
+                document.getElementById('total_containers').textContent = "Error fetching data";
+            }
+        })
+        .catch(error => {
+            // Display an error message if the fetch request fails
+            console.error('Error fetching total containers count:', error);
+            document.getElementById('total_containers').textContent = "Error fetching data";
+        });
+});
+
+
+fetch('shipment_api.php?action=importer_summary')
+  .then(response => response.json())
+  .then(data => {
+    const importers = data.map(item => item.importer);
+    const shipmentCounts = data.map(item => item.shipment_count);
+
+    // Custom color palette with shades of blue, dark blue, light blue, yellow, orange, gray, and dark gray
+    const colorPalette = [
+        '#1E3A8A', // Dark Blue
+        '#3B82F6', // Blue
+        '#93C5FD', // Light Blue
+        '#F59E0B', // Yellowish Orange
+        '#FBBF24', // Yellow variant
+        '#D97706', // Orange variant
+        '#1D4ED8', // Blue 600
+        '#60A5FA', // Sky Blue
+        '#9CA3AF', // Light Gray
+        '#4B5563', // Dark Gray
+        '#2563EB', // Sky Blue 500
+        '#1E40AF', // Deep Blue
+        '#F87171', // Soft Red (replaced with a darker hue for variety)
+        '#64748B', // Blue-gray
+        '#F3F4F6', // Light Gray (off white)
+        '#D1D5DB', // Light Gray (darker)
+        '#F43F5E', // Red variant (used sparingly)
+        '#E5E7EB', // Lightest Gray
+        '#6B7280', // Gray Dark
+        '#111827', // Dark Grey (Deepest)
+        '#3B82F6', // Blue Light
+        '#F9A8D4', // Pink-Orange Tint
+        '#B3B3B3', // Neutral Gray
+        '#D1D5DB', // Light Gray
+        '#9CA3AF', // Gray
+        '#818CF8', // Purple-ish Light Blue
+        '#A5B4FC', // Lavender Blue
+        '#2D3748', // Dark Grayish Blue
+        '#334155', // Darker Blue
+        '#A3A3A3', // Mid-Gray
+        '#B0D0D3', // Pale Blue Gray
+        '#FBBF24', // Yellow Orange
+        '#D97706', // Deep Orange
+        '#FCD34D', // Bright Yellow
+        '#C2C2C2', // Neutral Gray
+    ];
+
+    const ctx = document.getElementById('myPieChart').getContext('2d');
+    const myPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: importers,
+            datasets: [{
+                data: shipmentCounts,
+                backgroundColor: colorPalette.slice(0, importers.length), // Adjust colors based on number of importers
+                borderColor: '#ffffff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 15
+                    }
+                },
+                title: {
+                    display: false // Title removed
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            return `${label}: ${value}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+  });
+
+  function fetchShipments() {
+    fetch('shipment_api.php?action=fetch')
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.querySelector('#shipmentTable tbody');
+            tbody.innerHTML = '';
+            data.forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-id', row.id);
+
+                tr.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td data-value="${row.encoding_status}">${row.encoding_status}</td>
+                    <td data-value="${row.shipping_status}">${row.shipping_status}</td>
+                    <td>${row.importer}</td>
+                    <td>${row.commodity}</td>
+                    <td>${row.num_containers}</td>
+                    <td data-value="${row.cd_status}">${row.cd_status}</td>
+                    <td>${row.shipping_line}</td>
+                    <td>${row.eta}</td>
+                    <td>${row.days_remaining}</td>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+}
+
+document.addEventListener('DOMContentLoaded', fetchShipments);
+  </script>
+</body>
+</html>

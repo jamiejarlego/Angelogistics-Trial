@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Analytics</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #d9d9d9;
+      display: flex;
+      height: 100vh;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    .user-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      height: 100vh;
+      width: 250px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background-color: #ffffff;
+      transition: width 0.3s ease;
+      overflow-x: hidden;
+      z-index: 1002;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.collapsed {
+      width: 70px;
+    }
+
+    .sidebar a {
+      height: 50px;
+      padding: 12px 20px;
+      text-decoration: none;
+      font-size: 17px;
+      color: #000000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: 0.3s;
+    }
+
+    .sidebar.collapsed a {
+      justify-content: center;
+      gap: 0;
+    }
+
+    .sidebar.collapsed a span {
+      display: none;
+    }
+
+    .logo-section {
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-img {
+      width: 150px;
+      object-fit: contain;
+      transition: opacity 0.3s ease, width 0.3s ease;
+    }
+
+    .sidebar.collapsed .logo-img {
+      opacity: 0;
+      visibility: hidden;
+      width: 0;
+      height: 0;
+    }
+
+    .sidebar .logo-section {
+      height: 60px;
+      padding: 40px 30px 70px 43px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar.collapsed .logo-section .text {
+      display: none;
+    }
+
+    .toggle-btn {
+      background: none;
+      border: none;
+      font-size: 17px;
+      cursor: pointer;
+      color: #444;
+    }
+
+    .sidebar .menubtn {
+      position: fixed;
+      top: 10px;
+      left: 230px;
+      height: 40px;
+      width: 40px;
+      z-index: 9999;
+      color: #000000;
+      background: #e9e9e9;
+      text-align: center;
+      line-height: 42px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 17px;
+      transition: left 0.3s ease;
+      box-shadow: 0 12px 16px rgba(134,134,134,0.24), 0 17px 50px rgba(134,134,134,0.24);
+    }
+
+    .sidebar.collapsed .menubtn {
+      left: 15px;
+    }
+
+    .nav-links {
+      padding: 10px 0;
+      flex-grow: 1;
+    }
+
+    .nav-links a {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      color: #5c5c5c;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 17px;
+      border-radius: 15px;
+      margin: 5px 10px;
+      transition: background-color 0.2s;
+    }
+
+    .nav-links a:hover,
+.nav-links a.active {
+  background: #060644;
+  color: #eb972b;
+  backdrop-filter: blur(4px);
+  transform: scale(1.02);
+}
+
+
+    .sidebar.collapsed .nav-links a span {
+      display: none;
+    }
+
+    .user-section {
+      border-top: 1px solid #ddd;
+      padding: 10px 0;
+    }
+
+    .user-section a {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      color: #5c5c5c;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 17px;
+      border-radius: 15px;
+      margin: 5px 10px;
+    }
+
+    .user-section a:hover {
+      background: #060644;
+      color: #eb972b;
+      backdrop-filter: blur(4px);
+      transform: scale(1.02);
+    }
+
+    .sidebar.collapsed .user-section span {
+      display: none;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: #060644;
+      color: white;
+      font-size: 12px;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-left: 90px;
+      transition: padding-left 0.3s ease;
+      z-index: 1001;
+      box-shadow: 0 12px 16px rgba(44,44,44,0.24), 0 17px 50px rgba(44,44,44,0.24);
+    }
+
+    .topbar.shifted {
+      padding-left: 280px;
+    }
+
+    #mainContent {
+      transition: margin-left 0.3s ease, width 0.3s ease;
+      margin-left: 80px;
+      margin-right: 10px;
+      width: calc(100% - 90px);
+      padding: 20px;
+      margin-top: 80px;
+    }
+
+    #mainContent.shifted {
+      margin-left: 260px;
+      width: calc(100% - 270px);
+    }
+
+    .dashboard-grid {
+      display: flex;
+      gap: 20px;
+      height: calc(100vh - 120px); /* fills the screen minus topbar */
+    }
+
+    .left-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex: 1;
+      min-width: 250px;
+      max-width: 500px;
+    }
+
+    .graph-box {
+  flex: 2;
+  display: flex;
+  justify-content: center; /* Centers the chart horizontally */
+  align-items: center; /* Centers the chart vertically */
+  background-color: #f4f4f9;
+  border-radius: 20px;
+  padding: 20px;
+  position: relative; /* Ensures the canvas can be scaled properly */
+  width: 100%; /* Makes sure the container takes the full width */
+  height: 100%; /* Ensures the container takes full height */
+}
+
+.graph-box canvas {
+  width: 100% !important; /* Forces the canvas to take 100% of the width */
+  height: auto !important; /* Maintains the aspect ratio */
+  max-width: 100%; /* Prevents it from exceeding container width */
+  max-height: 100%; /* Prevents it from exceeding container height */
+  display: block; /* Removes any default inline styling */
+}
+
+    .shipment-box {
+  background-color: #0b0b50;
+  color: #eb972b;
+  display: flex;
+  flex-direction: column;
+  padding-top: 15px;
+  padding-bottom: 20px;
+  flex: 1;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.shipment-box h3 {
+  margin: 14x 0 0 0; /* Adds top margin */
+  font-size: 40px; /* Increased from 18px */
+  font-weight: bold;
+
+}
+.shipment-box p {
+  font-size: 124px;  /* Adjust as needed to "maximize" space */
+  margin: auto 0;   /* Vertically center within the box */
+  font-weight: bold;
+  text-align: center;
+}
+    .container-box {
+  background: linear-gradient(90deg, #ffde59, #ff914d);
+  color: black;
+}
+
+    h3 {
+      margin-bottom: 10px;
+    }
+    .button-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.status-btn {
+  background-color: #060644;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.status-btn:hover {
+  background-color: #eb972b;
+}
+
+.status-btn.active {
+  background-color: #eb972b;
+}
+
+.status-table {
+  width: 100%;
+  overflow-y: auto;
+}
+
+.status-table h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  background-color: #eb972b; /* current text color */
+  color: black; /* new text color */
+  font-size: 18px;
+  text-align: left;
+  padding: 10px 15px;
+  border-radius: 6px;
+}
+
+
+.status-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.status-table th, .status-table td {
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.status-table th {
+  background-color: #f9f9f9;
+  font-weight: bold;
+  color: #333;
+}
+
+.dashboard-grid {
+  display: flex;
+  gap: 20px;
+  height: calc(100vh - 120px); /* fills the screen minus topbar */
+}
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  min-width: 250px;
+  max-width: 500px;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 2; /* Takes up more space on the right */
+}
+
+.card {
+  background-color: #0b0b50;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.graph-box {
+  background-color: #f4f4f9;
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.container-box {
+  background: linear-gradient(90deg, #ffde59, #ff914d);
+  color: black;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div id="mySidebar" class="sidebar collapsed">
+  <div class="logo-section">
+    <img src="logoangelo.png" alt="Logo" class="logo-img" />
+    <div id="toggleSidebarBtn" class="menubtn">
+      <i class="fas fa-bars"></i>
+    </div>
+  </div>
+
+  <nav class="nav-links">
+    <a href="Dashboard.html"><i class="fas fa-home"></i><span>Dashboard</span></a>
+    <a href="Shipment.html"><i class="fas fa-truck"></i><span>Shipments</span></a>
+    <a href="records.php"><i class="fas fa-clipboard-list"></i><span>Records</span></a>
+    <a href="Analytics(Daily).html" class="active"><i class="fas fa-chart-bar"></i><span>Analytics</span></a>
+  </nav>
+
+  <div class="user-section">
+    <a href="account.html"><i class="fas fa-user"></i> <span>My Account</span></a>
+    <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+  </div>
+</div>
+
+<!-- Top Bar -->
+<div class="topbar" id="topbar">
+  <h1>ANALYTICS</h1>
+  
+</div>
+
+<!-- Main Content -->
+<div id="mainContent">
+ <div class="dashboard-grid">
+  <!-- Left Column -->
+  <div class="left-column">
+    <div class="button-group">
+      <button id="yearlyBtn" class="status-btn active">Yearly Status</button>
+      <button id="dailyBtn" class="status-btn">Daily Status</button>
+    </div>      
+    <div class="card shipment-box">
+      <h3>Count of Shipment</h3>
+      <p id="active_shipments"></p>
+    </div>
+
+    <div class="card container-box">
+      <h3>CONTAINER DEPOSIT</h3>
+      <table class="status-table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>CD</td>
+            <td id="container_cd">0</td>
+          </tr>
+          <tr>
+            <td>CD Collected</td>
+            <td id="container_cd_collected">0</td>
+          </tr>
+          <tr>
+            <td>No CD</td>
+            <td id="container_no_cd">0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Right Column -->
+  <div class="right-column">
+    <div class="card graph-box">
+      <div class="status-table">
+        <h4>FOR SHIPPING LINE / DELIVERY PHASE</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>FOR SHIPPING LINE / DELIVERY PHASE</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>SL/ADR/CD/WH</td><td id="shipping_sladr">0</td></tr>
+            <tr><td>FOR DELIVERY</td><td id="shipping_delivery">0</td></tr>
+            <tr><td>BILLED</td><td id="shipping_billed">0</td></tr>
+            <tr><td>DELIVERED/FOR BILLING</td><td id="shipping_delivered">0</td></tr>
+            <tr><td>CONTAINER DEPOSIT</td><td id="shipping_containerdeposit">0</td></tr>
+            <tr><td>NEW SHIPMENT</td><td id="shipping_newshipment">0</td></tr>
+          </tbody>
+        </table>
+
+        <h4>ENCODING / DOCUMENTATION PHASE</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>ENCODING DOCU PHASE</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>FOR CHECKING</td><td id="encoding_checking">0</td></tr>
+            <tr><td>UPLOADED</td><td id="encoding_uploaded">0</td></tr>
+            <tr><td>FOR UPLOADING</td><td id="encoding_uploading">0</td></tr>
+            <tr><td>FOR PRESAD</td><td id="encoding_presad">0</td></tr>
+            <tr><td>FAN PAID</td><td id="encoding_fanpaid">0</td></tr>
+            <tr><td>FOR DT/PC</td><td id="encoding_dtpc">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const sidebar = document.getElementById("mySidebar");
+  const content = document.getElementById("mainContent");
+  const topbar = document.getElementById("topbar");
+  const toggleBtn = document.getElementById("toggleSidebarBtn");
+  const yearlyBtn = document.getElementById('yearlyBtn');
+  const dailyBtn = document.getElementById('dailyBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  // Handle sidebar state
+  const savedSidebarState = localStorage.getItem('sidebarState');
+  const isCollapsed = savedSidebarState === 'collapsed';
+
+  [sidebar, topbar, content].forEach(el => el.style.transition = 'none');
+
+  if (isCollapsed) {
+    sidebar.classList.add("collapsed");
+    topbar.classList.remove("shifted");
+    content.classList.remove("shifted");
+  } else {
+    sidebar.classList.remove("collapsed");
+    topbar.classList.add("shifted");
+    content.classList.add("shifted");
+  }
+
+  [sidebar, topbar, content].forEach(el => void el.offsetHeight);
+  [sidebar, topbar, content].forEach(el => el.style.transition = '');
+
+  toggleBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("collapsed");
+    topbar.classList.toggle("shifted");
+    content.classList.toggle("shifted");
+
+    const isNowCollapsed = sidebar.classList.contains("collapsed");
+    localStorage.setItem("sidebarState", isNowCollapsed ? "collapsed" : "expanded");
+  });
+
+  // Handle status (daily/yearly)
+  const savedStatus = localStorage.getItem('statusType') || 'yearly';
+  if (savedStatus === 'daily') {
+    dailyBtn.classList.add('active');
+    yearlyBtn.classList.remove('active');
+  } else {
+    yearlyBtn.classList.add('active');
+    dailyBtn.classList.remove('active');
+  }
+
+  dailyBtn.addEventListener('click', () => {
+    localStorage.setItem('statusType', 'daily');
+    window.location.href = 'Analytics(Daily).html';
+  });
+
+  yearlyBtn.addEventListener('click', () => {
+    localStorage.setItem('statusType', 'yearly');
+    window.location.href = 'Analytics(Yearly).html';
+  });
+
+  // Handle logout
+  logoutBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    localStorage.clear();
+    sessionStorage.clear();
+    document.cookie = 'session=; Max-Age=0; path=/;';
+    window.location.href = 'LoginPage.html';
+  });
+
+  // Fetch shipment count
+  fetch('shipment_api.php?action=count_active_shipments')
+    .then(response => response.json())
+    .then(data => {
+      if (data.total_shipments !== undefined) {
+        document.getElementById('active_shipments').textContent = data.total_shipments;
+      } else {
+        document.getElementById('active_shipments').textContent = "Error fetching data";
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching total shipments count:', error);
+      document.getElementById('active_shipments').textContent = "Error fetching data";
+    });
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    fetch('shipment_api.php?action=status_counts')
+        .then(response => response.json())
+        .then(data => {
+            // Shipping Status
+            document.getElementById('shipping_sladr').innerText = data.shipping_counts['SL/ADR/CD/WH'] ?? 0;
+            document.getElementById('shipping_delivery').innerText = data.shipping_counts['FOR DELIVERY'] ?? 0;
+            document.getElementById('shipping_billed').innerText = data.shipping_counts['BILLED'] ?? 0;
+            document.getElementById('shipping_newshipment').innerText = data.shipping_counts['NEW SHIPMENT'] ?? 0;
+            document.getElementById('shipping_delivered').innerText = data.shipping_counts['DELIVERED/FOR BILLING'] ?? 0;
+            document.getElementById('shipping_containerdeposit').innerText = data.shipping_counts['CONTAINER DEPOSIT'] ?? 0;
+
+            // Encoding Status
+            document.getElementById('encoding_checking').innerText = data.encoding_counts['FOR CHECKING'] ?? 0;
+            document.getElementById('encoding_uploaded').innerText = data.encoding_counts['UPLOADED'] ?? 0;
+            document.getElementById('encoding_uploading').innerText = data.encoding_counts['FOR UPLOADING'] ?? 0;
+            document.getElementById('encoding_presad').innerText = data.encoding_counts['FOR PRESAD'] ?? 0;
+            document.getElementById('encoding_fanpaid').innerText = data.encoding_counts['FAN PAID'] ?? 0;
+            document.getElementById('encoding_dtpc').innerText = data.encoding_counts['FOR DT/PC'] ?? 0;  // NEW
+        })
+        .catch(error => {
+            console.error('Error fetching status counts:', error);
+        });
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+  fetch('shipment_api.php?action=cd_counts')
+    .then(response => response.json())
+    .then(data => {
+      console.log("Container Deposit Data:", data);  // Log the full response
+
+      if (data.container_deposit) {
+        document.getElementById('container_cd').innerText = data.container_deposit['CD'] ?? 0;
+        document.getElementById('container_cd_collected').innerText = data.container_deposit['CD COLLECTED'] ?? 0;
+        document.getElementById('container_no_cd').innerText = data.container_deposit['NO CD'] ?? 0;
+      } else {
+        console.error('Invalid data received', data);
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching container deposit data:', error);
+    });
+});
+
+
+</script>
+
+</body>
+</html>

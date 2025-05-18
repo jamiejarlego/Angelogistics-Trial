@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Account</title>
+  <link rel="stylesheet" href="account-style.css" />
+  <link rel="stylesheet" href="modal.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <style>/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+
+/* modal.css */
+
+.modal-overlay {
+  display: none; /* This hides it on page load */
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+  
+  .modal-window {
+    background: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    padding: 30px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease-out;
+    position: relative;
+    text-align: left;
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .close-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .modal-window form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .modal-window label {
+    margin-top: 10px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  
+  .modal-window input {
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  
+  .submit-button {
+    margin-top: 20px;
+    padding: 12px;
+    background: #ffa500;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    color: #000;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .submit-button:hover {
+    background: #ffb733;
+  }
+  .message {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    padding: 0.5rem;
+    border-radius: 5px;
+    display: block;
+    text-align: center;
+  }
+  
+  .message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+  
+  .message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+  
+  /* Style for the confirmation modal */
+#confirmModal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Transparent background */
+  z-index: 1000; /* On top of other elements */
+}
+
+.modal-window {
+  background-color: white;
+  padding: 20px;
+  width: 300px;
+  margin: 100px auto;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.confirm-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Space between buttons */
+}
+
+.confirm-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+  width: 90px; /* Equal width for both buttons */
+}
+
+.confirm-button:hover {
+  background-color: #f0f0f0;
+}
+
+#confirmYes {
+  background-color: #4CAF50; /* Green for 'Yes' */
+  color: white;
+}
+
+#confirmNo {
+  background-color: #f44336; /* Red for 'No' */
+  color: white;
+}
+
+#confirmYes:hover {
+  background-color: #45a049;
+}
+
+#confirmNo:hover {
+  background-color: #e32e2b;
+}
+
+   body {
+    font-family: sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #d9d9d9; /* Page background */
+}
+
+/* ==========================================================================
+    Header Styles
+    ========================================================================== */
+
+header {
+    padding-top: 10px;
+    width: 95%;
+    max-width: 1700px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    color: #060644;
+}
+
+.header-left {
+    text-align: left;
+    font-size: larger;
+}
+
+.header-left h1 {
+    margin-bottom: 5px;
+}
+
+.header-right button {
+    padding: 10px 15px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.header-right .cancel-button {
+    background-color: transparent; /* Transparent background */
+    color: #ffa500; /* Orange text color */
+    border: 1px solid #ffa500; /* Orange border */
+}
+
+.header-right .save-button {
+    background-color: #ffa500; /* Solid orange background */
+    color: #000; /* Black text color */
+    border: none; /* Remove default border */
+}
+
+/* ==========================================================================
+    Main Content Styles
+    ========================================================================== */
+
+main {
+    background-color: #ffffff; /* Main content background */
+    border-radius: 50px;
+    width: 95%;
+    max-width: 1700px;
+    margin-top: 0;
+    display: flex;
+    gap: 20px;
+}
+
+/* ==========================================================================
+    Left Column Styles
+    ========================================================================== */
+
+.left-column {
+  flex: 0.6;
+  padding: 20px;
+  border-radius: 50px;
+  background-color: #060644; /* Blue background */
+}
+
+.profile-section {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 130px;
+}
+
+.profile-image {
+  width: 200px; /* Or your desired size */
+  height: 200px; /* Or your desired size */
+  border-radius: 50%;
+  overflow: hidden; /* This is crucial to clip the image */
+  margin: 0 auto 10px;
+}
+
+/* Add this rule to style the image inside the container */
+.profile-image img {
+  display: block; /* To prevent extra spacing below the image */
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures the image covers the circle without distortion */
+}
+
+.account-name {
+    font-size: 30px;
+    margin-bottom: 5px;
+    color: #fff;
+}
+
+.left-column .username {
+    color: #999;
+    margin-top: 0px;
+}
+
+/* Left Column Action Buttons */
+.left-column .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.left-column .actions button {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #060644;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: left;
+    background-color: #060644;
+    color: #fff;
+    transition: border-color 0.3s ease;
+    font-size: 1em;
+}
+
+.left-column .actions button:hover {
+    border-color: #fff;
+}
+
+.edit-profile-button {
+    margin-bottom: 10px;
+}
+
+.left-column .change-password-button {
+    color: #6c757d;
+    padding-left: 15px;
+    margin-bottom: 120px;
+}
+
+/* Left Column Button Icons */
+.left-column .actions button img.icon-img {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    vertical-align: middle;
+    padding-left: 10px;
+}
+
+/* ==========================================================================
+    Right Column Styles
+    ========================================================================== */
+
+.right-column {
+    flex: 3;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: #ffffff; /* White background */
+    border-radius: 10px;
+    box-sizing: border-box;
+}
+
+.right-column h1 {
+    margin-top: 0%;
+    color: #060644; /* Set color for "My Account" */
+}
+
+.right-column h2 {
+    font-size: 90px;
+    margin-bottom: 20px;
+    align-self: flex-start;
+}
+
+.user-info-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+    justify-content: flex-start;
+}
+
+/* Small Profile Image Container (NEW) */
+.small-profile-image-container {
+    position: relative; /* ADDED THIS LINE */
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #ccc;
+    margin-right: 20px;
+}
+
+.small-profile-image-container img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Static Camera Icon (NEW) */
+.camera-icon-static {
+    position: absolute;
+    bottom: 23px; /* Ensure units are included */
+    right: 36px; /* Ensure units are included */
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 5px;
+    border-radius: 50%;
+    font-size: 1em;
+    z-index: 1;
+}
+
+.camera-icon-static img {
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+}
+
+.user-info-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Right Column Button Group */
+.button-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-left: 10px;
+}
+
+.button-group button {
+    padding: 10px 15px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.button-group .upload-photo-button {
+    background-color: #ffa500;
+    background-image: linear-gradient(to right, #ffa500, #ffc107);
+    color: #000;
+}
+
+.button-group .cancel-button-small {
+    background-color: transparent;
+    color: #ffa500;
+    border: 1px solid #ffa500;
+}
+
+/* ==========================================================================
+    Form Styles
+    ========================================================================== */
+
+.form-fields {
+    margin-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-fields .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.form-fields .form-group {
+    flex: 1 1 0;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-fields label {
+    margin-bottom: 3px;
+    font-weight: bold;
+    font-size: 22px;
+    color: #7c7c78; /* Form label color */
+}
+
+.form-fields input[type="text"],
+.form-fields input[type="email"],
+.form-fields input[type="password"] {
+    padding: 20px;
+    font-size: 20px;
+    width: 100%;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 16;
+    margin-bottom: 20px;
+    color: #060644; /* Form input text color */
+    border: 1px solid #060644; /* Form input border color */
+    min-height: 48px; /* Optional min-height */
+}
+
+/* Wider single input fields */
+.form-fields > .form-group {
+    width: 100%;
+}
+
+/* ==========================================================================
+    General Button Styles (applied in multiple sections)
+    ========================================================================== */
+
+.cancel-button,
+.upload-photo-button,
+.cancel-button-small {
+    padding: 10px 20px;
+    font-size: 20px;
+}
+
+.save-button {
+    background-color: #ffa500;
+    background-image: linear-gradient(to right, #ffa500, #ffc107);
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    font-size: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-image 0.3s ease;
+}
+
+.small-profile-image-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #ccc;
+    margin-right: 20px;
+}
+
+/* This is the half-circle camera overlay */
+.camera-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-bottom-left-radius: 50% 100%;
+    border-bottom-right-radius: 50% 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    background-color: rgba(0, 0, 0, 0.3); /* transparent background only */
+}
+
+.camera-overlay img {
+    width: 23px;
+    height: 23px;
+    
+}
+
+/* Assuming the link is inside a div with a specific class or ID in the sidebar */
+.left-column .create-account-container { /* Adjust selector if needed */
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+    width: 100%; /* Very important for centering within the available space */
+  }
+  
+  #createAccountLink {
+    text-decoration: underline;
+    cursor: pointer;
+    color: #fff;
+    /* Ensure it's not taking up block-level width that could push other elements */
+    display: inline-block; /* Or inline */
+    padding: 0;
+    margin: 0;
+  }
+  
+  #createAccountLink:hover {
+    text-decoration: none;
+  }
+
+  #notificationModal .modal-window {
+  text-align: center;
+  padding: 30px;
+}
+
+#notificationMessage {
+  margin-bottom: 20px;
+  font-size: 1.2em;
+}
+
+/* Style for the confirmation modal */
+#confirmModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Transparent background */
+    z-index: 1000; /* On top of other elements */
+  }
+  
+  .modal-window {
+    background-color: white;
+    padding: 20px;
+    width: 300px;
+    margin: 100px auto;
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .confirm-buttons {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px; /* Space between buttons */
+  }
+  
+  .confirm-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  
+  .confirm-button:hover {
+    background-color: #f0f0f0;
+  }
+  
+  /* No button: smaller and positioned on the left */
+  .confirm-no {
+    background-color: #f44336; /* Red for 'No' */
+    color: white;
+    font-size: 14px; /* Smaller font size */
+    padding: 8px 15px; /* Smaller padding */
+    flex-shrink: 0; /* Prevent shrinking */
+  }
+  
+  /* Yes button: positioned on the right */
+  .confirm-yes {
+    background-color: #4CAF50; /* Green for 'Yes' */
+    color: white;
+    flex-shrink: 0; /* Prevent shrinking */
+  }
+  
+  .confirm-no:hover {
+    background-color: #e32e2b;
+  }
+  
+  .confirm-yes:hover {
+    background-color: #45a049;
+  }
+
+  @media screen and (max-width: 768px) {
+    main {
+      flex-direction: column;
+      padding: 10px;
+    }
+
+    .left-column,
+    .right-column {
+      width: 100%;
+      border-radius: 30px;
+      padding: 15px;
+    }
+
+    .user-info-header {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .button-group {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+  }
+
+  /* Input error border */
+  input:invalid {
+    border: 2px solid red;
+  }
+
+  input:valid {
+    border: 1px solid #060644;
+  }
+        .bottom-buttons {
+  margin-top: auto;
+  width: 100%;
+  padding: 20px 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  border-top: 1px solid #ccc;
+}
+
+.bottom-buttons button {
+  padding: 12px 24px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #ffa500;
+  background-image: linear-gradient(to right, #ffa500, #ffc107);
+  color: #000;
+  transition: background-image 0.3s ease;
+}
+
+.bottom-buttons button:hover {
+  background-image: linear-gradient(to right, #ffb733, #ffd54f);
+}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <h1>My Account</h1>
+      <p class="subheading">Update your general information and manage your account settings.</p>
+    </div>
+    <div class="header-right">
+      <button class="cancel-button">Cancel</button>
+      <button class="save-button">Save Changes</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="left-column">
+    <div class="profile-section">
+        <div class="profile-image">
+            <img src="sidebar-icon/def-profile-pic.png" alt="Big Profile Picture">
+        </div>
+        <h2 class="account-name"><?php echo $firstName . " " . $lastName; ?></h2>
+        <p class="username">@<?php echo $username; ?></p>
+    </div>
+    <div class="actions">
+        <button class="change-password-button" id="openModal">
+        <img src="sidebar-icon/change-password.png" alt="Change Password" class="icon-img">Update Password
+        </button>
+    </div>
+    <div class="create-account-container">
+        <div id="createAccountLink">Create New Account</div>
+    </div>
+    </div>
+      <div class="right-column">
+        <h1>General Information</h1>
+        <div class="user-info-header">
+            <div class="small-profile-image-container">
+                <img src="sidebar-icon/def-profile-pic.png" alt="Small Profile Picture" id="smallProfileImage">
+                <div class="camera-overlay">
+                    <img src="sidebar-icon/camera.png" alt="Edit Profile Picture">
+                </div>
+            </div>
+            <div class="user-info-right">
+                <div class="button-group">
+                    <input type="file" id="imageInput" style="display: none;">
+                    <button class="upload-photo-button" onclick="document.getElementById('imageInput').click();">Upload New Photo</button>
+                    <button class="cancel-button-small">Cancel Upload</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-fields">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" placeholder="First Name" value="<?php echo $firstName; ?>">
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" placeholder="Last Name" value="<?php echo $lastName; ?>">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Username" value="<?php echo $username; ?>">
+            </div>
+            <div class="form-group">
+                <label for="role">Role/s</label>
+                <input type="text" id="role" placeholder="Role" value="<?php echo $roleName; ?>" readonly>
+            </div>
+        </div>
+        <input type="hidden" id="userId" value="<?php echo $userId; ?>">
+      </div>
+    </main>
+  <!-- Change Password Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-window">
+      <button class="close-modal" id="closeModal">&times;</button>
+      <h2>Change Password</h2>
+      <form>
+        <label for="current">Current Password</label>
+        <input type="password" id="current" placeholder="Current Password" required>
+
+        <label for="new">New Password</label>
+        <input type="password" id="new" placeholder="New Password" required>
+
+        <label for="confirm">Confirm New Password</label>
+        <input type="password" id="confirm" placeholder="Re-type Password" required>
+
+        <button type="submit" class="submit-button">Save Password</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create New Account Modal -->
+  <div class="modal-overlay" id="createAccountModalOverlay">
+  <div class="modal-window">
+    <button class="close-modal" id="closeCreateAccountModal">&times;</button>
+    <h2>Create New Account</h2>
+    <form id="createAccountForm">
+      <label for="newFirstName">First Name</label>
+      <input type="text" id="newFirstName" placeholder="Enter First Name" required>
+
+      <label for="newLastName">Last Name</label>
+      <input type="text " id="newLastName" placeholder="Enter Last Name" required>
+
+      <label for="newUsername">Username</label>
+      <input type="text" id="newUsername" placeholder="Enter Username" required>
+
+      <label for="newPassword">Password</label>
+      <input type="password" id="newPassword" placeholder="Enter  Password" required>
+
+      <label for="newRole">Role</label>
+      <select id="newRole" required>
+        <option value="Admin">Admin</option>
+        <option value="Employee">Employee</option>
+      </select>
+
+      <button type="submit" class="submit-button">Create Account</button>
+    </form>
+  </div>
+</div>
+
+<!-- Notification Modal -->
+<div class="modal-overlay" id="notificationModal" style="display: none;">
+  <div class="modal-window">
+    <h3 id="notificationMessage">This is a notification</h3>
+    <button class="submit-button" id="closeNotification">OK</button>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" id="confirmModal" style="display: none;">
+  <div class="modal-window">
+    <h3 id="confirmMessage">Are you sure?</h3>
+    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem;">
+      <button id="confirmNo" class="confirm-button confirm-no">No</button>
+      <button id="confirmYes" class="confirm-button confirm-yes">Yes</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-buttons">
+  <button id="exitButton">Exit</button>
+  <button id="logoutButton">Logout</button>
+</div>
+
+
+<script src="modal.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const showNotification = (message) => {
+        const modal = document.getElementById("notificationModal");
+        const msg = document.getElementById("notificationMessage");
+        msg.textContent = message;
+        modal.style.display = "flex";
+    };
+
+    const closeNotificationBtn = document.getElementById("closeNotification");
+    if (closeNotificationBtn) {
+        closeNotificationBtn.addEventListener("click", () => {
+            document.getElementById("notificationModal").style.display = "none";
+        });
+    }
+
+    // --- Change Password Modal ---
+    const openModalBtn = document.getElementById("openModal");
+    const modalOverlay = document.getElementById("modalOverlay");
+    const closeModalBtn = document.getElementById("closeModal");
+    const form = modalOverlay.querySelector("form");
+    const newPass = document.getElementById("new");
+    const confirmPass = document.getElementById("confirm");
+    const currentPass = document.getElementById("current");
+
+    if (openModalBtn) {
+        openModalBtn.addEventListener("click", () => {
+            modalOverlay.style.display = "flex";
+        });
+    }
+
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener("click", () => {
+            modalOverlay.style.display = "none";
+            if (form) form.reset();
+        });
+    }
+
+    if (modalOverlay) {
+        modalOverlay.addEventListener("click", (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.style.display = "none";
+                if (form) form.reset();
+            }
+        });
+    }
+
+    if (form) {
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            if (newPass.value.length < 8) {
+                showNotification("New password must be at least 8 characters long.");
+                return;
+            }
+            if (newPass.value !== confirmPass.value) {
+                showNotification("New password and confirmation do not match.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("action", "change_password");
+            formData.append("currentPassword", currentPass.value);
+            formData.append("newPassword", newPass.value);
+            formData.append("userId", document.getElementById("userId").value);
+
+            fetch("", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then((data) => {
+                if (data.success) {
+                    showNotification(data.message);
+                    modalOverlay.style.display = "none";
+                    form.reset();
+                } else {
+                    showNotification(data.message);
+                }
+            })
+            .catch((error) => {
+                showNotification("An error occurred while changing the password: " + error.message);
+            });
+        });
+    }
+
+    // --- Create New Account Modal ---
+    const openCreateAccountModalBtn = document.getElementById("createAccountLink");
+    const createAccountModalOverlay = document.getElementById("createAccountModalOverlay");
+    const closeCreateAccountModalBtn = document.getElementById("closeCreateAccountModal");
+    const createAccountForm = document.getElementById("createAccountForm");
+
+    if (openCreateAccountModalBtn) {
+        openCreateAccountModalBtn.addEventListener("click", () => {
+            createAccountModalOverlay.style.display = "flex";
+        });
+    }
+
+    if (closeCreateAccountModalBtn) {
+        closeCreateAccountModalBtn.addEventListener("click", () => {
+            createAccountModalOverlay.style.display = "none";
+            if (createAccountForm) createAccountForm.reset();
+        });
+    }
+
+    if (createAccountModalOverlay) {
+        createAccountModalOverlay.addEventListener("click", (e) => {
+            if (e.target === createAccountModalOverlay) {
+                createAccountModalOverlay.style.display = "none";
+                if (createAccountForm) createAccountForm.reset();
+            }
+        });
+    }
+
+    if (createAccountForm) {
+        createAccountForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const newFirstName = document.getElementById("newFirstName").value;
+            const newLastName = document.getElementById("newLastName").value;
+            const newUsername = document.getElementById("newUsername").value;
+            const newPassword = document.getElementById("newPassword").value;
+            const newRole = document.getElementById("newRole").value;
+
+            if (!newFirstName || !newLastName || !newUsername || !newPassword || !newRole) {
+                showNotification("All fields are required to create a new account.");
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                showNotification("Password must be at least 8 characters long.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("action", "create_account");
+            formData.append("newFirstName", newFirstName);
+            formData.append("newLastName", newLastName);
+            formData.append("newUsername", newUsername);
+            formData.append("newPassword", newPassword);
+            formData.append("newRole", newRole);
+
+            fetch("", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then((data) => {
+                if (data.success) {
+                    showNotification(data.message);
+                    createAccountModalOverlay.style.display = "none";
+                    createAccountForm.reset();
+                } else {
+                    showNotification(data.message);
+                }
+            })
+            .catch((error) => {
+                showNotification("An error occurred while creating the account: " + error.message);
+            });
+        });
+    }
+
+    // --- Profile Photo Upload ---
+    const profileImage = document.querySelector(".profile-image img");
+    const smallProfileImage = document.querySelector(".small-profile-image-container img");
+    const uploadPhotoButton = document.querySelector(".upload-photo-button");
+    const cancelUploadButton = document.querySelector(".cancel-button-small");
+    const imageInput = document.getElementById("imageInput");
+    const userIdInput = document.getElementById("userId");
+
+    let selectedImageData = null;
+    let originalSmallImageSrc = smallProfileImage.src;
+
+    if (uploadPhotoButton && imageInput) {
+        uploadPhotoButton.addEventListener("click", (event) => {
+            event.preventDefault();
+            imageInput.click();
+        });
+
+        imageInput.addEventListener("change", () => {
+            const file = imageInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    profileImage.src = e.target.result;
+                    smallProfileImage.src = e.target.result;
+                    selectedImageData = e.target.result.split(",")[1];
+                };
+                reader.readAsDataURL(file);
+            } else {
+                selectedImageData = null;
+            }
+        });
+    }
+
+    const showConfirm = (message, callback) => {
+        const confirmModal = document.getElementById("confirmModal");
+        const confirmMessage = document.getElementById("confirmMessage");
+        const confirmYesBtn = document.getElementById("confirmYes");
+        const confirmNoBtn = document.getElementById("confirmNo");
+
+        confirmMessage.textContent = message;
+        confirmModal.style.display = "flex";
+
+        const yesHandler = () => {
+            confirmModal.style.display = "none";
+            callback();
+            confirmYesBtn.removeEventListener("click", yesHandler);
+            confirmNoBtn.removeEventListener("click", noHandler);
+        };
+
+        const noHandler = () => {
+            confirmModal.style.display = "none";
+            confirmYesBtn.removeEventListener("click", yesHandler);
+            confirmNoBtn.removeEventListener("click", noHandler);
+        };
+
+        confirmYesBtn.addEventListener("click", yesHandler);
+        confirmNoBtn.addEventListener("click", noHandler);
+    };
+
+    if (cancelUploadButton) {
+        cancelUploadButton.addEventListener("click", () => {
+            showConfirm("Cancel photo upload and revert to previous image?", () => {
+                profileImage.src = profileImage.dataset.original || profileImage.src;
+                smallProfileImage.src = smallProfileImage.dataset.original || originalSmallImageSrc;
+                imageInput.value = "";
+                selectedImageData = null;
+            });
+        });
+    }
+
+    // --- Save / Cancel General Info ---
+    const saveButton = document.querySelector(".save-button");
+    const cancelButton = document.querySelector(".cancel-button");
+
+    const firstNameInput = document.getElementById("firstName");
+    const lastNameInput = document.getElementById("lastName");
+    const usernameInput = document.getElementById("username");
+    const roleInput = document.getElementById("role");
+
+    let originalFirstName = firstNameInput.value;
+    let originalLastName = lastNameInput.value;
+    let originalUsername = usernameInput.value;
+    let originalRole = roleInput.value;
+    let originalImageSrc = profileImage.src;
+    let originalSmallImageSrcOnLoad = smallProfileImage.src;
+
+    if (!originalSmallImageSrc) {
+        originalSmallImageSrc = originalSmallImageSrcOnLoad;
+    }
+
+    if (saveButton) {
+        saveButton.addEventListener("click", () => {
+            showConfirm("Save changes to your profile?", () => {
+                const formData = new FormData();
+                formData.append("action", "save_profile");
+                formData.append("userId", userIdInput.value);
+                formData.append("firstName", firstNameInput.value);
+                formData.append("lastName", lastNameInput.value);
+                formData.append("username", usernameInput.value);
+
+                if (selectedImageData) {
+                    formData.append("profileImage", selectedImageData);
+                }
+
+                fetch("", {
+                    method: "POST",
+                    body: formData,
+                })
+                .then((response) => {
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return response.text();
+                })
+                .then((responseText) => {
+                    try {
+                        const data = JSON.parse(responseText);
+                        if (data && data.success === true) {
+                            originalFirstName = firstNameInput.value;
+                            originalLastName = lastNameInput.value;
+                            originalUsername = usernameInput.value;
+                            originalImageSrc = profileImage.src;
+                            originalSmallImageSrc = smallProfileImage.src;
+                            profileImage.dataset.original = profileImage.src;
+                            smallProfileImage.dataset.original = smallProfileImage.src;
+                            showNotification(data.message);
+                        } else {
+                            showNotification(data ? data.message : "An error occurred while saving.");
+                        }
+                    } catch (error) {
+                        showNotification("An error occurred: Invalid server response.");
+                    }
+                })
+                .catch((error) => {
+                    showNotification("An error occurred while saving: " + error.message);
+                });
+            });
+        });
+    }
+
+    if (cancelButton) {
+        cancelButton.addEventListener("click", () => {
+            showConfirm("Are you sure you want to cancel your changes?", () => {
+                firstNameInput.value = originalFirstName;
+                lastNameInput.value = originalLastName;
+                usernameInput.value = originalUsername;
+                roleInput.value = originalRole;
+                profileImage.src = originalImageSrc;
+                smallProfileImage.src = originalSmallImageSrc;
+                imageInput.value = "";
+                selectedImageData = null;
+            });
+        });
+    }
+});
+window.onload = function() {
+    fetch('accounts.php')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const user = data.data;
+                document.getElementById('profilePic').src = user.profileImage;
+                document.getElementById('fullName').innerText = user.firstName + " " + user.lastName;
+                document.getElementById('userName').innerText = user.username;
+                document.getElementById('roleName').innerText = user.roleName;
+
+                document.querySelector('[name=firstName]').value = user.firstName;
+                document.querySelector('[name=lastName]').value = user.lastName;
+                document.querySelector('[name=username]').value = user.username;
+            } else {
+                alert(data.message);
+            }
+        });
+}
+
+// Save profile
+function saveProfile() {
+    const formData = new FormData(document.getElementById('profileForm'));
+    formData.append('action', 'save_profile');
+
+    fetch('accounts.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        if (data.success) location.reload();
+    });
+}
+
+// Change password
+function changePassword() {
+    const formData = new FormData(document.getElementById('passwordForm'));
+    formData.append('action', 'change_password');
+
+    fetch('accounts.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+    });
+}
+
+    document.getElementById("exitButton").addEventListener("click", () => {
+        window.location.href = "Dashboard.html";  // Go to dashboard
+    });
+
+    document.getElementById("logoutButton").addEventListener("click", () => {
+        window.location.href = "LoginPage.html";  // Go to login page
+    });
+
+
+</script>
+
+</body>
+</html>
